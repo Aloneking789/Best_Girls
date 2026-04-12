@@ -34,9 +34,9 @@ const navItems: NavItem[] = [
       { label: 'Homepage Content', href: '/content/homepage' },
       { label: 'Homepage Slider', href: '/content/slider' },
       { label: 'Campus Facilities', href: '/content/facilities' },
-      { label: 'Quick Links', href: '/content/quick-links' },
+      // { label: 'Quick Links', href: '/content/quick-links' },
       { label: 'Blog & News', href: '/content/blog' },
-      { label: 'Testimonials', href: '/content/testimonials' },
+      // { label: 'Testimonials', href: '/content/testimonials' },
       { label: 'Departments', href: '/content/departments' },
       { label: 'Gallery', href: '/content/gallery' },
       { label: 'Achievements', href: '/content/achievements' },
@@ -52,23 +52,23 @@ const navItems: NavItem[] = [
     label: 'Admissions & Leads',
     icon: <GraduationCap size={20} />,
     children: [
-      { label: 'Admissions', href: '/admissions' },
+      // { label: 'Admissions', href: '/admissions' },
       { label: 'Contact Leads', href: '/leads' },
-      { label: 'AI Admission Assistant', href: '/admissions/ai-assistant' },
+      // { label: 'AI Admission Assistant', href: '/admissions/ai-assistant' },
     ],
   },
 
   { label: 'Notice Board', href: '/notices', icon: <Bell size={20} /> },
-  { label: 'Student Corner', href: '/student-corner', icon: <Code2 size={20} /> },
+  // { label: 'Student Corner', href: '/student-corner', icon: <Code2 size={20} /> },
 
   {
     label: 'Users & Roles',
     icon: <Users size={20} />,
     children: [
-      { label: 'User Profile', href: '/users/profile' },
+      // { label: 'User Profile', href: '/users/profile' },
       { label: 'User Management', href: '/users' },
-      { label: 'Roles', href: '/users/roles' },
-      { label: 'Permissions', href: '/users/permissions' },
+      // { label: 'Roles', href: '/users/roles' },
+      // { label: 'Permissions', href: '/users/permissions' },
     ],
   },
 

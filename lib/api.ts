@@ -2155,3 +2155,36 @@ export const deleteRole = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+// ==================== DASHBOARD ENDPOINTS ====================
+
+export interface DashboardMetrics {
+  leadCount: number;
+  inquiryCount: number;
+  placementCount: number;
+  noticeCount: number;
+  resourceCount: number;
+  userCount: number;
+  eventCount: number;
+  facultyCount: number;
+}
+
+// Get dashboard metrics
+export const getDashboard = async (): Promise<DashboardMetrics> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/dash/dashboard`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch dashboard data');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching dashboard:', error);
+    throw error;
+  }
+};
