@@ -1,59 +1,65 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
-import { Save, Upload } from 'lucide-react';
+import { getSettings, updateSettings, Settings, SettingsUpdatePayload } from '@/lib/api';
+import { Save, Loader } from 'lucide-react';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
-  const [generalSettings, setGeneralSettings] = useState({
-    siteName: 'My College',
-    siteTagline: 'Excellence in Education',
-    contactEmail: 'info@college.edu',
-    phone: '+91-9876543210',
-    address: '123 Education Lane, City, State 123456',
-  });
+  const [settings, setSettings] = useState<Settings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [formData, setFormData] = useState<SettingsUpdatePayload>({});
 
-  const [seoSettings, setSeoSettings] = useState({
-    defaultTitle: 'My College - Excellence in Education',
-    defaultDescription: 'Leading institution for higher education',
-    keywords: 'college, university, education',
-  });
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
-  const [socialLinks, setSocialLinks] = useState({
-    facebook: 'https://facebook.com/college',
-    twitter: 'https://twitter.com/college',
-    instagram: 'https://instagram.com/college',
-    linkedin: 'https://linkedin.com/college',
-    youtube: 'https://youtube.com/college',
-  });
-
-  const [emailSettings, setEmailSettings] = useState({
-    smtpServer: 'smtp.gmail.com',
-    smtpPort: '587',
-    senderEmail: 'noreply@college.edu',
-    senderName: 'My College',
-  });
-
-  const handleGeneralChange = (field: string, value: string) => {
-    setGeneralSettings({ ...generalSettings, [field]: value });
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await getSettings();
+      setSettings(data);
+      setFormData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch settings');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSeoChange = (field: string, value: string) => {
-    setSeoSettings({ ...seoSettings, [field]: value });
+  const handleChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
   };
 
-  const handleSocialChange = (field: string, value: string) => {
-    setSocialLinks({ ...socialLinks, [field]: value });
+  const handleSocialChange = (platform: string, value: string) => {
+    setFormData({
+      ...formData,
+      socialLinks: {
+        ...formData.socialLinks,
+        [platform]: value,
+      },
+    });
   };
 
-  const handleEmailChange = (field: string, value: string) => {
-    setEmailSettings({ ...emailSettings, [field]: value });
-  };
-
-  const handleSave = () => {
-    alert('Settings saved successfully!');
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError('');
+      await updateSettings(formData);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+      await fetchSettings();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -69,218 +75,298 @@ export default function SettingsPage() {
               <p className="text-muted-foreground mt-1">Configure your college website and application settings</p>
             </div>
 
-            {/* Tabs */}
-            <div className="bg-white border border-border rounded-lg">
-              <div className="flex border-b border-border">
-                {[
-                  { id: 'general', label: 'General Settings' },
-                  { id: 'seo', label: 'SEO Settings' },
-                  { id: 'social', label: 'Social Links' },
-                  { id: 'email', label: 'Email Configuration' },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-4 font-medium transition-colors ${
-                      activeTab === tab.id
-                        ? 'text-primary border-b-2 border-primary'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+            {loading && <div className="text-center py-12 text-muted-foreground">Loading settings...</div>}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 text-sm">
+                {error}
               </div>
+            )}
 
-              {/* Content */}
-              <div className="p-6 space-y-6">
-                {/* General Settings */}
-                {activeTab === 'general' && (
-                  <div className="space-y-6">
-                    {/* Logo Upload */}
-                    <div className="border border-dashed border-border rounded-lg p-8 text-center hover:bg-muted transition-colors cursor-pointer">
-                      <Upload className="mx-auto mb-3 text-muted-foreground" size={32} />
-                      <h3 className="font-medium text-foreground mb-1">Upload Logo</h3>
-                      <p className="text-sm text-muted-foreground">PNG, JPG or GIF (max 2MB)</p>
-                    </div>
+            {saveSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 text-sm">
+                Settings saved successfully!
+              </div>
+            )}
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Site Name</label>
-                        <input
-                          type="text"
-                          value={generalSettings.siteName}
-                          onChange={(e) => handleGeneralChange('siteName', e.target.value)}
-                          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Tagline</label>
-                        <input
-                          type="text"
-                          value={generalSettings.siteTagline}
-                          onChange={(e) => handleGeneralChange('siteTagline', e.target.value)}
-                          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Contact Email</label>
-                      <input
-                        type="email"
-                        value={generalSettings.contactEmail}
-                        onChange={(e) => handleGeneralChange('contactEmail', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Phone</label>
-                      <input
-                        type="tel"
-                        value={generalSettings.phone}
-                        onChange={(e) => handleGeneralChange('phone', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Address</label>
-                      <textarea
-                        value={generalSettings.address}
-                        onChange={(e) => handleGeneralChange('address', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* SEO Settings */}
-                {activeTab === 'seo' && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Default Page Title</label>
-                      <input
-                        type="text"
-                        value={seoSettings.defaultTitle}
-                        onChange={(e) => handleSeoChange('defaultTitle', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">60 characters recommended</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Default Meta Description</label>
-                      <textarea
-                        value={seoSettings.defaultDescription}
-                        onChange={(e) => handleSeoChange('defaultDescription', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        rows={3}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">150-160 characters recommended</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Keywords</label>
-                      <input
-                        type="text"
-                        value={seoSettings.keywords}
-                        onChange={(e) => handleSeoChange('keywords', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="Separate with commas"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Social Links */}
-                {activeTab === 'social' && (
-                  <div className="space-y-4">
-                    {Object.entries(socialLinks).map(([platform, url]) => (
-                      <div key={platform}>
-                        <label className="block text-sm font-medium text-foreground mb-2 capitalize">
-                          {platform} URL
-                        </label>
-                        <input
-                          type="url"
-                          value={url}
-                          onChange={(e) => handleSocialChange(platform, e.target.value)}
-                          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
+            {!loading && settings && (
+              <>
+                {/* Tabs */}
+                <div className="bg-white border border-border rounded-lg">
+                  <div className="flex border-b border-border overflow-x-auto">
+                    {[
+                      { id: 'general', label: 'General Settings' },
+                      { id: 'seo', label: 'SEO Settings' },
+                      { id: 'social', label: 'Social Links' },
+                      { id: 'scripts', label: 'Scripts & Embeds' },
+                      { id: 'assets', label: 'Assets' },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`px-6 py-4 font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
+                            ? 'text-primary border-b-2 border-primary'
+                            : 'text-muted-foreground hover:text-foreground'
+                          }`}
+                      >
+                        {tab.label}
+                      </button>
                     ))}
                   </div>
-                )}
 
-                {/* Email Configuration */}
-                {activeTab === 'email' && (
-                  <div className="space-y-4">
-                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-sm text-orange-800">
-                      Configure your SMTP settings for sending emails from your college website.
-                    </div>
+                  {/* Content */}
+                  <div className="p-6 space-y-6">
+                    {/* General Settings */}
+                    {activeTab === 'general' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Website Name</label>
+                          <input
+                            type="text"
+                            value={formData.websiteName || ''}
+                            onChange={(e) => handleChange('websiteName', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                          />
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">SMTP Server</label>
-                        <input
-                          type="text"
-                          value={emailSettings.smtpServer}
-                          onChange={(e) => handleEmailChange('smtpServer', e.target.value)}
-                          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Website Meta</label>
+                          <textarea
+                            value={formData.websiteMeta || ''}
+                            onChange={(e) => handleChange('websiteMeta', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                            rows={3}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Contact Email</label>
+                          <input
+                            type="email"
+                            value={formData.email || ''}
+                            onChange={(e) => handleChange('email', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Phone</label>
+                            <input
+                              type="tel"
+                              value={formData.phone || ''}
+                              onChange={(e) => handleChange('phone', e.target.value)}
+                              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                              disabled={saving}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">WhatsApp Number</label>
+                            <input
+                              type="tel"
+                              value={formData.whatsappNumber || ''}
+                              onChange={(e) => handleChange('whatsappNumber', e.target.value)}
+                              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                              disabled={saving}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Address</label>
+                          <textarea
+                            value={formData.address || ''}
+                            onChange={(e) => handleChange('address', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                            rows={3}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Google Maps Link</label>
+                          <input
+                            type="url"
+                            value={formData.addressLink || ''}
+                            onChange={(e) => handleChange('addressLink', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                            placeholder="https://maps.google.com/..."
+                          />
+                        </div>
                       </div>
+                    )}
 
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">SMTP Port</label>
-                        <input
-                          type="text"
-                          value={emailSettings.smtpPort}
-                          onChange={(e) => handleEmailChange('smtpPort', e.target.value)}
-                          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
+                    {/* SEO Settings */}
+                    {activeTab === 'seo' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Meta Title</label>
+                          <input
+                            type="text"
+                            value={formData.metaKeywords || ''}
+                            onChange={(e) => handleChange('metaKeywords', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">60 characters recommended</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Meta Description</label>
+                          <textarea
+                            value={formData.metaDescription || ''}
+                            onChange={(e) => handleChange('metaDescription', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                            rows={3}
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">150-160 characters recommended</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Sender Email</label>
-                      <input
-                        type="email"
-                        value={emailSettings.senderEmail}
-                        onChange={(e) => handleEmailChange('senderEmail', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
+                    {/* Social Links */}
+                    {activeTab === 'social' && (
+                      <div className="space-y-4">
+                        {Object.keys(formData.socialLinks || {}).map((platform) => (
+                          <div key={platform}>
+                            <label className="block text-sm font-medium text-foreground mb-2 capitalize">
+                              {platform} URL
+                            </label>
+                            <input
+                              type="url"
+                              value={formData.socialLinks?.[platform as keyof typeof formData.socialLinks] || ''}
+                              onChange={(e) => handleSocialChange(platform, e.target.value)}
+                              className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                              disabled={saving}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Sender Name</label>
-                      <input
-                        type="text"
-                        value={emailSettings.senderName}
-                        onChange={(e) => handleEmailChange('senderName', e.target.value)}
-                        className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
+                    {/* Scripts & Embeds */}
+                    {activeTab === 'scripts' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Header Script</label>
+                          <textarea
+                            value={formData.headerScript || ''}
+                            onChange={(e) => handleChange('headerScript', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 font-mono text-xs"
+                            disabled={saving}
+                            rows={6}
+                            placeholder="Paste Google Analytics, GTM or other header scripts here..."
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">Scripts to include in page header</p>
+                        </div>
 
-                    <button className="w-full border border-border rounded-lg px-4 py-2 text-foreground hover:bg-muted transition-colors">
-                      Test Email Configuration
-                    </button>
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Footer Script</label>
+                          <textarea
+                            value={formData.footerScript || ''}
+                            onChange={(e) => handleChange('footerScript', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 font-mono text-xs"
+                            disabled={saving}
+                            rows={6}
+                            placeholder="Paste Intercom widget or other footer scripts here..."
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">Scripts to include in page footer</p>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Map Embed</label>
+                          <textarea
+                            value={formData.mapEmbed || ''}
+                            onChange={(e) => handleChange('mapEmbed', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 font-mono text-xs"
+                            disabled={saving}
+                            rows={6}
+                            placeholder="Paste Google Maps embed code here..."
+                          />
+                          <p className="text-xs text-muted-foreground mt-1">Embed code for Google Maps</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Assets */}
+                    {activeTab === 'assets' && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Logo URL</label>
+                          <input
+                            type="url"
+                            value={formData.logo || ''}
+                            onChange={(e) => handleChange('logo', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                            placeholder="https://example.com/logo.svg"
+                          />
+                          {formData.logo && (
+                            <img src={formData.logo} alt="Logo preview" className="mt-2 h-12 rounded" />
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">White Logo URL</label>
+                          <input
+                            type="url"
+                            value={formData.whiteLogo || ''}
+                            onChange={(e) => handleChange('whiteLogo', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                            placeholder="https://example.com/logo-white.svg"
+                          />
+                          {formData.whiteLogo && (
+                            <div className="mt-2 bg-black p-2 rounded inline-block">
+                              <img src={formData.whiteLogo} alt="White logo preview" className="h-12 rounded" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-foreground mb-2">Favicon URL</label>
+                          <input
+                            type="url"
+                            value={formData.favicon || ''}
+                            onChange={(e) => handleChange('favicon', e.target.value)}
+                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                            disabled={saving}
+                            placeholder="https://example.com/favicon.ico"
+                          />
+                          {formData.favicon && (
+                            <img src={formData.favicon} alt="Favicon preview" className="mt-2 h-6 rounded" />
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {/* Save Button */}
-            <div className="flex justify-end">
-              <button
-                onClick={handleSave}
-                className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Save size={20} /> Save Changes
-              </button>
-            </div>
+                {/* Save Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader size={20} className="animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={20} /> Save Changes
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </main>
       </div>

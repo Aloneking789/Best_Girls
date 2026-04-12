@@ -1,47 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
 import Modal from '@/components/modal';
-import { Plus, Edit2, Trash2, Search, Filter, Calendar } from 'lucide-react';
-
-interface Event {
-  id: number;
-  title: string;
-  category: string;
-  startDate: string;
-  startTime: string;
-  endDate: string;
-  endTime: string;
-  venue: string;
-  isFeatured: boolean;
-  status: 'Upcoming' | 'Ongoing' | 'Completed';
-}
-
-const eventsData: Event[] = [
-  { id: 1, title: 'Tech Summit 2024', category: 'Seminar', startDate: '2024-05-15', startTime: '09:00', endDate: '2024-05-15', endTime: '17:00', venue: 'Main Auditorium', isFeatured: true, status: 'Upcoming' },
-  { id: 2, title: 'Sports Day', category: 'Sports', startDate: '2024-04-20', startTime: '08:00', endDate: '2024-04-20', endTime: '18:00', venue: 'Sports Ground', isFeatured: true, status: 'Upcoming' },
-  { id: 3, title: 'Annual Fest', category: 'Cultural', startDate: '2024-04-25', startTime: '10:00', endDate: '2024-04-27', endTime: '22:00', venue: 'Campus Grounds', isFeatured: false, status: 'Upcoming' },
-  { id: 4, title: 'Workshop: AI & ML', category: 'Workshop', startDate: '2024-04-18', startTime: '14:00', endDate: '2024-04-18', endTime: '16:00', venue: 'Room 101', isFeatured: false, status: 'Ongoing' },
-];
+import { Plus, Edit2, Trash2, Search, X, Star } from 'lucide-react';
+import { Event, EventCreatePayload, EventUpdatePayload, getEvents, createEvent, updateEvent, deleteEvent } from '@/lib/api';
 
 export default function EventsPage() {
-  const [events, setEvents] = useState<Event[]>(eventsData);
+  const [events, setEvents] = useState<Event[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
+  const [filterCategory, setFilterCategory] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getEvents();
+      setEvents(data);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const categories = Array.from(new Set(events.map(e => e.category)));
 
   const filteredEvents = events
     .filter(event =>
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (filterStatus === 'All' || event.status === filterStatus)
+      (filterCategory === 'All' || event.category === filterCategory)
     )
-    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+    .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
 
   const paginatedEvents = filteredEvents.slice(
     (currentPage - 1) * itemsPerPage,
@@ -50,16 +54,17 @@ export default function EventsPage() {
 
   const totalPages = Math.ceil(filteredEvents.length / itemsPerPage);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Upcoming':
-        return 'bg-blue-100 text-blue-800';
-      case 'Ongoing':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Completed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const handleAddEvent = async (formData: EventCreatePayload) => {
+    try {
+      setActionLoading(true);
+      const newEvent = await createEvent(formData);
+      setEvents([newEvent, ...events]);
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error('Error creating event:', err);
+      alert('Failed to create event');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -68,35 +73,34 @@ export default function EventsPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    setEvents(events.filter(e => e.id !== id));
-  };
-
-  const toggleFeatured = (id: number) => {
-    setEvents(events.map(event =>
-      event.id === id ? { ...event, isFeatured: !event.isFeatured } : event
-    ));
-  };
-
-  const handleAddEvent = (formData: any) => {
-    const newEvent: Event = {
-      id: Math.max(...events.map(e => e.id), 0) + 1,
-      ...formData,
-      isFeatured: false,
-    };
-    setEvents([newEvent, ...events]);
-    setIsAddModalOpen(false);
-  };
-
-  const handleUpdateEvent = (formData: any) => {
+  const handleUpdateEvent = async (formData: EventUpdatePayload) => {
     if (selectedEvent) {
-      setEvents(events.map(event =>
-        event.id === selectedEvent.id
-          ? { ...event, ...formData }
-          : event
-      ));
-      setIsEditModalOpen(false);
-      setSelectedEvent(null);
+      try {
+        setActionLoading(true);
+        const updated = await updateEvent(selectedEvent.id, formData);
+        setEvents(events.map(e => e.id === selectedEvent.id ? updated : e));
+        setIsEditModalOpen(false);
+        setSelectedEvent(null);
+      } catch (err) {
+        console.error('Error updating event:', err);
+        alert('Failed to update event');
+      } finally {
+        setActionLoading(false);
+      }
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    try {
+      setActionLoading(true);
+      await deleteEvent(id);
+      setEvents(events.filter(e => e.id !== id));
+    } catch (err) {
+      console.error('Error deleting event:', err);
+      alert('Failed to delete event');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -138,112 +142,130 @@ export default function EventsPage() {
                 </div>
 
                 <select
-                  value={filterStatus}
+                  value={filterCategory}
                   onChange={(e) => {
-                    setFilterStatus(e.target.value);
+                    setFilterCategory(e.target.value);
                     setCurrentPage(1);
                   }}
                   className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="All">All Status</option>
-                  <option value="Upcoming">Upcoming</option>
-                  <option value="Ongoing">Ongoing</option>
-                  <option value="Completed">Completed</option>
+                  <option value="All">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white border border-border rounded-lg overflow-hidden shadow-sm">
-              <table className="w-full text-sm">
-                <thead className="bg-muted border-b border-border">
-                  <tr>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Event Title</th>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Category</th>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Date & Time</th>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Venue</th>
-                    <th className="text-center py-4 px-6 font-semibold text-foreground">Status</th>
-                    <th className="text-center py-4 px-6 font-semibold text-foreground">Featured</th>
-                    <th className="text-center py-4 px-6 font-semibold text-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedEvents.map((event) => (
-                    <tr key={event.id} className="border-b border-border hover:bg-muted transition-colors">
-                      <td className="py-4 px-6 font-medium text-foreground">{event.title}</td>
-                      <td className="py-4 px-6 text-muted-foreground">{event.category}</td>
-                      <td className="py-4 px-6 text-muted-foreground text-xs">{event.startDate} {event.startTime}</td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm">{event.venue}</td>
-                      <td className="py-4 px-6 text-center">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(event.status)}`}>
-                          {event.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-center">
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Loading events...</div>
+            ) : error ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">{error}</div>
+            ) : null}
+
+            {!loading && (
+              <>
+                {/* Table */}
+                <div className="bg-white border border-border rounded-lg overflow-hidden shadow-sm">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted border-b border-border">
+                      <tr>
+                        <th className="text-left py-4 px-6 font-semibold text-foreground">Event Title</th>
+                        <th className="text-left py-4 px-6 font-semibold text-foreground">Category</th>
+                        <th className="text-left py-4 px-6 font-semibold text-foreground">Dates</th>
+                        <th className="text-left py-4 px-6 font-semibold text-foreground">Venue</th>
+                        <th className="text-center py-4 px-6 font-semibold text-foreground">Featured</th>
+                        <th className="text-center py-4 px-6 font-semibold text-foreground">Active</th>
+                        <th className="text-center py-4 px-6 font-semibold text-foreground">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedEvents.length > 0 ? (
+                        paginatedEvents.map((event) => (
+                          <tr key={event.id} className="border-b border-border hover:bg-muted transition-colors">
+                            <td className="py-4 px-6 font-medium text-foreground">{event.title}</td>
+                            <td className="py-4 px-6 text-muted-foreground">{event.category}</td>
+                            <td className="py-4 px-6 text-muted-foreground text-xs">
+                              {new Date(event.startAt).toLocaleDateString()} - {new Date(event.endAt).toLocaleDateString()}
+                            </td>
+                            <td className="py-4 px-6 text-muted-foreground text-sm">{event.venue}</td>
+                            <td className="py-4 px-6 text-center">
+                              <Star size={18} className={event.isFeatured ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${event.isActive
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                {event.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => handleEdit(event)}
+                                  disabled={actionLoading}
+                                  className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  <Edit2 size={18} />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(event.id)}
+                                  disabled={actionLoading}
+                                  className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="py-8 px-6 text-center text-muted-foreground">
+                            No events found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Pagination */}
+                {!loading && totalPages > 1 && (
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 border border-border rounded-lg hover:bg-muted disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((page) => (
                         <button
-                          onClick={() => toggleFeatured(event.id)}
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold transition-colors ${event.isFeatured
-                              ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
-                              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-2 rounded-lg ${currentPage === page
+                            ? 'bg-primary text-primary-foreground'
+                            : 'border border-border hover:bg-muted'
                             }`}
                         >
-                          {event.isFeatured ? '⭐ Featured' : 'Not Featured'}
+                          {page}
                         </button>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(event)}
-                            className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
-                          >
-                            <Edit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(event.id)}
-                            className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 border border-border rounded-lg hover:bg-muted disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((page) => (
+                      ))}
+                    </div>
                     <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-2 rounded-lg ${currentPage === page
-                          ? 'bg-primary text-primary-foreground'
-                          : 'border border-border hover:bg-muted'
-                        }`}
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 border border-border rounded-lg hover:bg-muted disabled:opacity-50"
                     >
-                      {page}
+                      Next
                     </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 border border-border rounded-lg hover:bg-muted disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>
@@ -252,55 +274,84 @@ export default function EventsPage() {
       {/* Add Modal */}
       <Modal
         isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={() => !actionLoading && setIsAddModalOpen(false)}
         title="Add New Event"
       >
-        <EventForm onSubmit={handleAddEvent} onCancel={() => setIsAddModalOpen(false)} />
+        <EventForm onSubmit={handleAddEvent} onCancel={() => setIsAddModalOpen(false)} isLoading={actionLoading} />
       </Modal>
 
       {/* Edit Modal */}
       <Modal
         isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => !actionLoading && setIsEditModalOpen(false)}
         title="Edit Event"
       >
         <EventForm
           initialData={selectedEvent || undefined}
           onSubmit={handleUpdateEvent}
           onCancel={() => setIsEditModalOpen(false)}
+          isLoading={actionLoading}
         />
       </Modal>
     </div>
   );
 }
 
+interface EventFormProps {
+  initialData?: Event;
+  onSubmit: (data: EventCreatePayload | EventUpdatePayload) => void;
+  onCancel: () => void;
+  isLoading?: boolean;
+}
+
 function EventForm({
   initialData,
   onSubmit,
   onCancel,
-}: {
-  initialData?: Event;
-  onSubmit: (data: any) => void;
-  onCancel: () => void;
-}) {
+  isLoading = false,
+}: EventFormProps) {
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     category: initialData?.category || '',
-    startDate: initialData?.startDate || '',
-    startTime: initialData?.startTime || '',
-    endDate: initialData?.endDate || '',
-    endTime: initialData?.endTime || '',
+    excerpt: initialData?.excerpt || '',
+    description: initialData?.description || '',
+    startAt: initialData?.startAt ? initialData.startAt.split('T')[0] : '',
+    endAt: initialData?.endAt ? initialData.endAt.split('T')[0] : '',
     venue: initialData?.venue || '',
-    status: initialData?.status || 'Upcoming',
+    isFeatured: initialData?.isFeatured || false,
+    isActive: initialData?.isActive !== false,
   });
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string>(initialData?.coverImage || '');
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setCoverImageFile(null);
+    setCoverImagePreview('');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const submitData = {
+      ...formData,
+      ...(coverImageFile && { coverImage: coverImageFile }),
+    };
+    onSubmit(submitData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto">
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">Event Title</label>
         <input
@@ -309,39 +360,58 @@ function EventForm({
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           required
+          disabled={isLoading}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">Category</label>
-          <select
+          <input
+            type="text"
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             required
-          >
-            <option value="">Select</option>
-            <option value="Seminar">Seminar</option>
-            <option value="Workshop">Workshop</option>
-            <option value="Sports">Sports</option>
-            <option value="Cultural">Cultural</option>
-            <option value="Academic">Academic</option>
-          </select>
+            disabled={isLoading}
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Status</label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Upcoming' | 'Ongoing' | 'Completed' })}
+          <label className="block text-sm font-medium text-foreground mb-2">Venue</label>
+          <input
+            type="text"
+            value={formData.venue}
+            onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="Upcoming">Upcoming</option>
-            <option value="Ongoing">Ongoing</option>
-            <option value="Completed">Completed</option>
-          </select>
+            required
+            disabled={isLoading}
+          />
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">Excerpt</label>
+        <textarea
+          value={formData.excerpt}
+          onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          rows={2}
+          required
+          disabled={isLoading}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">Description</label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          rows={3}
+          required
+          disabled={isLoading}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -349,71 +419,88 @@ function EventForm({
           <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
           <input
             type="date"
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+            value={formData.startAt}
+            onChange={(e) => setFormData({ ...formData, startAt: e.target.value })}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             required
+            disabled={isLoading}
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Start Time</label>
-          <input
-            type="time"
-            value={formData.startTime}
-            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            required
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">End Date</label>
           <input
             type="date"
-            value={formData.endDate}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+            value={formData.endAt}
+            onChange={(e) => setFormData({ ...formData, endAt: e.target.value })}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">End Time</label>
-          <input
-            type="time"
-            value={formData.endTime}
-            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            required
+            disabled={isLoading}
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Venue</label>
+        <label className="block text-sm font-medium text-foreground mb-2">Cover Image</label>
+        {coverImagePreview && (
+          <div className="mb-3 relative inline-block">
+            <img src={coverImagePreview} alt="Preview" className="h-24 w-32 rounded-lg object-cover" />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+              disabled={isLoading}
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
         <input
-          type="text"
-          value={formData.venue}
-          onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
           className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          required
+          disabled={isLoading}
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.isFeatured}
+            onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+            className="rounded"
+            disabled={isLoading}
+          />
+          <span className="text-sm font-medium text-foreground">Featured</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.isActive}
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            className="rounded"
+            disabled={isLoading}
+          />
+          <span className="text-sm font-medium text-foreground">Active</span>
+        </label>
       </div>
 
       <div className="flex gap-2 pt-4">
         <button
           type="submit"
-          className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={isLoading}
+          className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
-          {initialData ? 'Update' : 'Add'} Event
+          {isLoading ? 'Saving...' : initialData ? 'Update' : 'Add'} Event
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-muted text-foreground px-4 py-2 rounded-lg hover:bg-muted/80 transition-colors"
+          disabled={isLoading}
+          className="flex-1 bg-muted text-foreground px-4 py-2 rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

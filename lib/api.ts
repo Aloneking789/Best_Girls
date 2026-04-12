@@ -664,3 +664,1256 @@ export const toggleFacility = async (id: string): Promise<Facility> => {
     throw error;
   }
 };
+
+// ==================== BLOG/POST ENDPOINTS ====================
+
+export interface PostCategory {
+  id: string;
+  name: string;
+}
+
+export interface Post {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  isPublished: boolean;
+  publishedAt: string | null;
+  metaTitle: string;
+  metaDescription: string;
+  categoryId: string;
+  createdAt: string;
+  updatedAt: string;
+  category: PostCategory;
+  tags: string[];
+}
+
+export interface PostCreatePayload {
+  title: string;
+  slug?: string;
+  excerpt: string;
+  content: string;
+  metaTitle: string;
+  metaDescription: string;
+  categoryId: string;
+  coverImage?: File;
+  isPublished?: boolean;
+  publishedAt?: string;
+}
+
+export interface PostUpdatePayload {
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  content?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  categoryId?: string;
+  coverImage?: File;
+  isPublished?: boolean;
+  publishedAt?: string;
+}
+
+// Get all post categories
+export const getPostCategories = async (): Promise<PostCategory[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ps/categories`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch post categories');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching post categories:', error);
+    throw error;
+  }
+};
+
+// Create post category
+export const createPostCategory = async (payload: { name: string }): Promise<PostCategory> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ps/categories`, {
+      method: 'POST',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create post category');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating post category:', error);
+    throw error;
+  }
+};
+
+// Get all posts
+export const getPosts = async (): Promise<Post[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ps/posts/`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch posts');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    throw error;
+  }
+};
+
+// Create post with image upload
+export const createPost = async (payload: PostCreatePayload): Promise<Post> => {
+  try {
+    const formData = new FormData();
+    formData.append('title', payload.title);
+    formData.append('slug', payload.slug || payload.title.toLowerCase().replace(/\s+/g, '-'));
+    formData.append('excerpt', payload.excerpt);
+    formData.append('content', payload.content);
+    formData.append('metaTitle', payload.metaTitle);
+    formData.append('metaDescription', payload.metaDescription);
+    formData.append('categoryId', payload.categoryId);
+    formData.append('isPublished', payload.isPublished ? 'true' : 'false');
+    if (payload.publishedAt) formData.append('publishedAt', payload.publishedAt);
+    if (payload.coverImage) formData.append('coverImage', payload.coverImage);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ps/posts`, {
+      method: 'POST',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create post');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating post:', error);
+    throw error;
+  }
+};
+
+// Update post
+export const updatePost = async (id: string, payload: PostUpdatePayload): Promise<Post> => {
+  try {
+    const formData = new FormData();
+    if (payload.title) formData.append('title', payload.title);
+    if (payload.slug) formData.append('slug', payload.slug);
+    if (payload.excerpt) formData.append('excerpt', payload.excerpt);
+    if (payload.content) formData.append('content', payload.content);
+    if (payload.metaTitle) formData.append('metaTitle', payload.metaTitle);
+    if (payload.metaDescription) formData.append('metaDescription', payload.metaDescription);
+    if (payload.categoryId) formData.append('categoryId', payload.categoryId);
+    if (payload.isPublished !== undefined) formData.append('isPublished', payload.isPublished ? 'true' : 'false');
+    if (payload.publishedAt) formData.append('publishedAt', payload.publishedAt);
+    if (payload.coverImage) formData.append('coverImage', payload.coverImage);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ps/posts/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update post');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating post:', error);
+    throw error;
+  }
+};
+
+// Delete post
+export const deletePost = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ps/posts/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete post');
+    }
+  } catch (error) {
+    console.error('Error deleting post:', error);
+    throw error;
+  }
+};
+
+// ==================== DEPARTMENT ENDPOINTS ====================
+
+export interface Department {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DepartmentCreatePayload {
+  name: string;
+  slug?: string;
+  description: string;
+  isActive?: boolean;
+}
+
+export interface DepartmentUpdatePayload {
+  name?: string;
+  slug?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+// Get all departments
+export const getDepartments = async (): Promise<Department[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/cr/departments`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch departments');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching departments:', error);
+    throw error;
+  }
+};
+
+// Create department
+export const createDepartment = async (payload: DepartmentCreatePayload): Promise<Department> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/cr/departments`, {
+      method: 'POST',
+      headers: getHeaders(true),
+      body: JSON.stringify({
+        ...payload,
+        slug: payload.slug || payload.name.toLowerCase().replace(/\s+/g, '-'),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create department');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating department:', error);
+    throw error;
+  }
+};
+
+// Update department
+export const updateDepartment = async (
+  id: string,
+  payload: DepartmentUpdatePayload
+): Promise<Department> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/cr/departments/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update department');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating department:', error);
+    throw error;
+  }
+};
+
+// Delete department
+export const deleteDepartment = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/cr/departments/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete department');
+    }
+  } catch (error) {
+    console.error('Error deleting department:', error);
+    throw error;
+  }
+};
+
+// ==================== FACULTY ENDPOINTS ====================
+
+export interface Faculty {
+  id: string;
+  name: string;
+  email: string | null;
+  designation: string | null;
+  qualification: string;
+  experience: string;
+  bio: string;
+  photoUrl: string;
+  staffType: string;
+  departmentId: string;
+  order: number;
+  isFeatured: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  department: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+}
+
+export interface FacultyCreatePayload {
+  name: string;
+  email?: string;
+  designation?: string;
+  qualification: string;
+  experience: string;
+  bio: string;
+  photo?: File;
+  staffType: string;
+  departmentId: string;
+}
+
+export interface FacultyUpdatePayload {
+  name?: string;
+  email?: string;
+  designation?: string;
+  qualification?: string;
+  experience?: string;
+  bio?: string;
+  photo?: File;
+  staffType?: string;
+  departmentId?: string;
+}
+
+// Get all faculty
+export const getFaculty = async (): Promise<Faculty[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/fr/faculty`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch faculty');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching faculty:', error);
+    throw error;
+  }
+};
+
+// Create faculty with photo upload
+export const createFaculty = async (payload: FacultyCreatePayload): Promise<Faculty> => {
+  try {
+    const formData = new FormData();
+    formData.append('name', payload.name);
+    if (payload.email) formData.append('email', payload.email);
+    if (payload.designation) formData.append('designation', payload.designation);
+    formData.append('qualification', payload.qualification);
+    formData.append('experience', payload.experience);
+    formData.append('bio', payload.bio);
+    formData.append('staffType', payload.staffType);
+    formData.append('departmentId', payload.departmentId);
+    if (payload.photo) formData.append('photo', payload.photo);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/fr/faculty/`, {
+      method: 'POST',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create faculty');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating faculty:', error);
+    throw error;
+  }
+};
+
+// Update faculty
+export const updateFaculty = async (id: string, payload: FacultyUpdatePayload): Promise<Faculty> => {
+  try {
+    const formData = new FormData();
+    if (payload.name) formData.append('name', payload.name);
+    if (payload.email) formData.append('email', payload.email);
+    if (payload.designation) formData.append('designation', payload.designation);
+    if (payload.qualification) formData.append('qualification', payload.qualification);
+    if (payload.experience) formData.append('experience', payload.experience);
+    if (payload.bio) formData.append('bio', payload.bio);
+    if (payload.staffType) formData.append('staffType', payload.staffType);
+    if (payload.departmentId) formData.append('departmentId', payload.departmentId);
+    if (payload.photo) formData.append('photo', payload.photo);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/fr/faculty/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update faculty');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating faculty:', error);
+    throw error;
+  }
+};
+
+// Delete faculty
+export const deleteFaculty = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/fr/faculty/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete faculty');
+    }
+  } catch (error) {
+    console.error('Error deleting faculty:', error);
+    throw error;
+  }
+};
+
+// Toggle faculty featured status
+export const toggleFeatureFaculty = async (id: string): Promise<Faculty> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/fr/faculty/${id}/feature`, {
+      method: 'PATCH',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle featured status');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error toggling featured status:', error);
+    throw error;
+  }
+};
+
+// ==================== EVENT ENDPOINTS ====================
+
+export interface Event {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  description: string;
+  category: string;
+  coverImage: string;
+  startAt: string;
+  endAt: string;
+  venue: string;
+  isFeatured: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventCreatePayload {
+  title: string;
+  slug?: string;
+  excerpt: string;
+  description: string;
+  category: string;
+  startAt: string;
+  endAt: string;
+  venue: string;
+  coverImage?: File;
+  isFeatured?: boolean;
+  isActive?: boolean;
+}
+
+export interface EventUpdatePayload {
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  description?: string;
+  category?: string;
+  startAt?: string;
+  endAt?: string;
+  venue?: string;
+  coverImage?: File;
+  isFeatured?: boolean;
+  isActive?: boolean;
+}
+
+// Get all events
+export const getEvents = async (): Promise<Event[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/er/events`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch events');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    throw error;
+  }
+};
+
+// Create event with image upload
+export const createEvent = async (payload: EventCreatePayload): Promise<Event> => {
+  try {
+    const formData = new FormData();
+    formData.append('title', payload.title);
+    formData.append('slug', payload.slug || payload.title.toLowerCase().replace(/\s+/g, '-'));
+    formData.append('excerpt', payload.excerpt);
+    formData.append('description', payload.description);
+    formData.append('category', payload.category);
+    formData.append('startAt', payload.startAt);
+    formData.append('endAt', payload.endAt);
+    formData.append('venue', payload.venue);
+    formData.append('isFeatured', payload.isFeatured ? 'true' : 'false');
+    formData.append('isActive', payload.isActive ? 'true' : 'false');
+    if (payload.coverImage) formData.append('coverImage', payload.coverImage);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/er/events/`, {
+      method: 'POST',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create event');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating event:', error);
+    throw error;
+  }
+};
+
+// Update event
+export const updateEvent = async (id: string, payload: EventUpdatePayload): Promise<Event> => {
+  try {
+    const formData = new FormData();
+    if (payload.title) formData.append('title', payload.title);
+    if (payload.slug) formData.append('slug', payload.slug);
+    if (payload.excerpt) formData.append('excerpt', payload.excerpt);
+    if (payload.description) formData.append('description', payload.description);
+    if (payload.category) formData.append('category', payload.category);
+    if (payload.startAt) formData.append('startAt', payload.startAt);
+    if (payload.endAt) formData.append('endAt', payload.endAt);
+    if (payload.venue) formData.append('venue', payload.venue);
+    if (payload.isFeatured !== undefined) formData.append('isFeatured', payload.isFeatured ? 'true' : 'false');
+    if (payload.isActive !== undefined) formData.append('isActive', payload.isActive ? 'true' : 'false');
+    if (payload.coverImage) formData.append('coverImage', payload.coverImage);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/er/events/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update event');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating event:', error);
+    throw error;
+  }
+};
+
+// Delete event
+export const deleteEvent = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/er/events/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete event');
+    }
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    throw error;
+  }
+};
+
+// ==================== ACHIEVEMENT ENDPOINTS ====================
+
+export interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  year: number;
+  imageUrl: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AchievementCreatePayload {
+  title: string;
+  description: string;
+  category: string;
+  year: number;
+  imageUrl?: string;
+  image?: File;
+  isActive?: boolean;
+}
+
+export interface AchievementUpdatePayload {
+  title?: string;
+  description?: string;
+  category?: string;
+  year?: number;
+  imageUrl?: string;
+  image?: File;
+  isActive?: boolean;
+}
+
+// Get all achievements
+export const getAchievements = async (): Promise<Achievement[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ar/achievements`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch achievements');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching achievements:', error);
+    throw error;
+  }
+};
+
+// Create achievement with image upload
+export const createAchievement = async (payload: AchievementCreatePayload): Promise<Achievement> => {
+  try {
+    const formData = new FormData();
+    formData.append('title', payload.title);
+    formData.append('description', payload.description);
+    formData.append('category', payload.category);
+    formData.append('year', payload.year.toString());
+    formData.append('imageUrl', payload.imageUrl || 'NA');
+    formData.append('isActive', payload.isActive ? 'true' : 'false');
+    if (payload.image) formData.append('image', payload.image);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ar/achievements`, {
+      method: 'POST',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create achievement');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating achievement:', error);
+    throw error;
+  }
+};
+
+// Update achievement
+export const updateAchievement = async (id: string, payload: AchievementUpdatePayload): Promise<Achievement> => {
+  try {
+    const formData = new FormData();
+    if (payload.title) formData.append('title', payload.title);
+    if (payload.description) formData.append('description', payload.description);
+    if (payload.category) formData.append('category', payload.category);
+    if (payload.year) formData.append('year', payload.year.toString());
+    formData.append('imageUrl', payload.imageUrl || 'NA');
+    if (payload.isActive !== undefined) formData.append('isActive', payload.isActive ? 'true' : 'false');
+    if (payload.image) formData.append('image', payload.image);
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/ar/achievements/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update achievement');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating achievement:', error);
+    throw error;
+  }
+};
+
+// Delete achievement
+export const deleteAchievement = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ar/achievements/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete achievement');
+    }
+  } catch (error) {
+    console.error('Error deleting achievement:', error);
+    throw error;
+  }
+};
+
+// ==================== NOTICE ENDPOINTS ====================
+
+export interface Notice {
+  id: string;
+  title: string;
+  content: string;
+  type: string;
+  publishedAt: string;
+  expiresAt: string;
+  isArchived: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NoticeCreatePayload {
+  title: string;
+  content: string;
+  type: string;
+  publishedAt: string;
+  expiresAt: string;
+  isArchived?: boolean;
+  isActive?: boolean;
+}
+
+export interface NoticeUpdatePayload {
+  title?: string;
+  content?: string;
+  type?: string;
+  publishedAt?: string;
+  expiresAt?: string;
+  isArchived?: boolean;
+  isActive?: boolean;
+}
+
+// Get all notices
+export const getNotices = async (): Promise<Notice[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/nr/notices`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch notices');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching notices:', error);
+    throw error;
+  }
+};
+
+// Create notice
+export const createNotice = async (payload: NoticeCreatePayload): Promise<Notice> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/nr/notices`, {
+      method: 'POST',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create notice');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating notice:', error);
+    throw error;
+  }
+};
+
+// Update notice
+export const updateNotice = async (id: string, payload: NoticeUpdatePayload): Promise<Notice> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/nr/notices/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update notice');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating notice:', error);
+    throw error;
+  }
+};
+
+// Archive/unarchive notice
+export const toggleArchiveNotice = async (id: string): Promise<Notice> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/nr/notices/${id}/archive`, {
+      method: 'PATCH',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle archive status');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error toggling archive status:', error);
+    throw error;
+  }
+};
+
+// Delete notice
+export const deleteNotice = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/nr/notices/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete notice');
+    }
+  } catch (error) {
+    console.error('Error deleting notice:', error);
+    throw error;
+  }
+};
+
+// ==================== PLACEMENT ENDPOINTS ====================
+
+export interface Placement {
+  id: string;
+  companyName: string;
+  studentName: string;
+  year: number;
+  testimonial: string;
+  companyLogo: string;
+  order: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlacementCreatePayload {
+  companyName: string;
+  studentName: string;
+  year: number;
+  testimonial: string;
+  companyLogo?: File | string;
+  order?: number;
+  isActive?: boolean;
+}
+
+export interface PlacementUpdatePayload {
+  companyName?: string;
+  studentName?: string;
+  year?: number;
+  testimonial?: string;
+  companyLogo?: File | string;
+  order?: number;
+  isActive?: boolean;
+}
+
+// Get all placements
+export const getPlacements = async (): Promise<Placement[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/pr/placements/`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch placements');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching placements:', error);
+    throw error;
+  }
+};
+
+// Create placement with logo upload
+export const createPlacement = async (payload: PlacementCreatePayload): Promise<Placement> => {
+  try {
+    const formData = new FormData();
+    formData.append('companyName', payload.companyName);
+    formData.append('studentName', payload.studentName);
+    formData.append('year', payload.year.toString());
+    formData.append('testimonial', payload.testimonial);
+    formData.append('isActive', payload.isActive ? 'true' : 'false');
+    if (payload.order !== undefined) {
+      formData.append('order', payload.order.toString());
+    }
+    if (payload.companyLogo) {
+      if (typeof payload.companyLogo === 'string') {
+        formData.append('companyLogo', payload.companyLogo);
+      } else {
+        formData.append('companyLogo', payload.companyLogo);
+      }
+    }
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/pr/placements/`, {
+      method: 'POST',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create placement');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating placement:', error);
+    throw error;
+  }
+};
+
+// Update placement
+export const updatePlacement = async (id: string, payload: PlacementUpdatePayload): Promise<Placement> => {
+  try {
+    const formData = new FormData();
+    if (payload.companyName) formData.append('companyName', payload.companyName);
+    if (payload.studentName) formData.append('studentName', payload.studentName);
+    if (payload.year !== undefined) formData.append('year', payload.year.toString());
+    if (payload.testimonial) formData.append('testimonial', payload.testimonial);
+    if (payload.isActive !== undefined) formData.append('isActive', payload.isActive ? 'true' : 'false');
+    if (payload.order !== undefined) formData.append('order', payload.order.toString());
+    if (payload.companyLogo) {
+      if (typeof payload.companyLogo === 'string') {
+        formData.append('companyLogo', payload.companyLogo);
+      } else {
+        formData.append('companyLogo', payload.companyLogo);
+      }
+    }
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/pr/placements/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update placement');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating placement:', error);
+    throw error;
+  }
+};
+
+// Delete placement
+export const deletePlacement = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/pr/placements/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete placement');
+    }
+  } catch (error) {
+    console.error('Error deleting placement:', error);
+    throw error;
+  }
+};
+
+// ==================== INQUIRY ENDPOINTS ====================
+
+export interface Inquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  courseInterest: string;
+  message: string;
+  documentUrl: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InquiryCreatePayload {
+  name: string;
+  email: string;
+  phone: string;
+  courseInterest: string;
+  message: string;
+  documentUrl?: string;
+}
+
+export interface InquiryUpdatePayload {
+  name?: string;
+  email?: string;
+  phone?: string;
+  courseInterest?: string;
+  message?: string;
+  documentUrl?: string;
+  status?: string;
+}
+
+// Get all inquiries
+export const getInquiries = async (): Promise<Inquiry[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ir/inquiries`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch inquiries');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching inquiries:', error);
+    throw error;
+  }
+};
+
+// Create inquiry
+export const createInquiry = async (payload: InquiryCreatePayload): Promise<Inquiry> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ir/inquiries`, {
+      method: 'POST',
+      headers: getHeaders(false),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create inquiry');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating inquiry:', error);
+    throw error;
+  }
+};
+
+// Update inquiry status
+export const updateInquiry = async (id: string, payload: InquiryUpdatePayload): Promise<Inquiry> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ir/inquiries/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update inquiry');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating inquiry:', error);
+    throw error;
+  }
+};
+
+// Delete inquiry
+export const deleteInquiry = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ir/inquiries/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete inquiry');
+    }
+  } catch (error) {
+    console.error('Error deleting inquiry:', error);
+    throw error;
+  }
+};
+
+// ==================== SETTINGS ENDPOINTS ====================
+
+export interface SocialLinks {
+  facebook?: string;
+  twitter?: string;
+  instagram?: string;
+  linkedin?: string;
+}
+
+export interface Settings {
+  id: string;
+  websiteName: string;
+  websiteMeta: string;
+  metaKeywords: string;
+  metaDescription: string;
+  email: string;
+  phone: string;
+  whatsappNumber: string;
+  address: string;
+  addressLink: string;
+  socialLinks: SocialLinks;
+  headerScript: string;
+  footerScript: string;
+  mapEmbed: string;
+  logo: string;
+  whiteLogo: string;
+  favicon: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SettingsUpdatePayload {
+  websiteName?: string;
+  websiteMeta?: string;
+  metaKeywords?: string;
+  metaDescription?: string;
+  email?: string;
+  phone?: string;
+  whatsappNumber?: string;
+  address?: string;
+  addressLink?: string;
+  socialLinks?: SocialLinks;
+  headerScript?: string;
+  footerScript?: string;
+  mapEmbed?: string;
+  logo?: string;
+  whiteLogo?: string;
+  favicon?: string;
+}
+
+// Get settings
+export const getSettings = async (): Promise<Settings> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sr/settings`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch settings');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    throw error;
+  }
+};
+
+// Update settings
+export const updateSettings = async (payload: SettingsUpdatePayload): Promise<Settings> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/sr/settings/`, {
+      method: 'PUT',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update settings');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    throw error;
+  }
+};

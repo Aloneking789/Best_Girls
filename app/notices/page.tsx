@@ -1,43 +1,111 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
 import Modal from '@/components/modal';
-import { Plus, Edit2, Trash2, Search, Filter, Clock } from 'lucide-react';
-
-interface Notice {
-  id: number;
-  title: string;
-  type: 'Exam' | 'Announcement' | 'General';
-  publishedAt: string;
-  expiryDate: string;
-  isArchived: boolean;
-  body: string;
-}
-
-const noticesData: Notice[] = [
-  { id: 1, title: 'Exam Schedule Released', type: 'Exam', publishedAt: '2024-04-10', expiryDate: '2024-05-31', isArchived: false, body: 'Spring semester exam schedule has been released. Check the portal for details.' },
-  { id: 2, title: 'Holiday Announcement', type: 'Announcement', publishedAt: '2024-04-09', expiryDate: '2024-04-30', isArchived: false, body: 'Campus will be closed for summer holidays from June 1st.' },
-  { id: 3, title: 'Fee Payment Due', type: 'General', publishedAt: '2024-04-08', expiryDate: '2024-04-20', isArchived: false, body: 'Please submit your fees by April 20th to avoid late charges.' },
-  { id: 4, title: 'Old Admission Notice', type: 'Announcement', publishedAt: '2024-03-01', expiryDate: '2024-03-31', isArchived: true, body: 'This notice has expired.' },
-];
+import { getNotices, createNotice, updateNotice, deleteNotice, toggleArchiveNotice, Notice, NoticeCreatePayload, NoticeUpdatePayload } from '@/lib/api';
+import { Plus, Edit2, Trash2, Search, Clock } from 'lucide-react';
 
 export default function NoticesPage() {
-  const [notices, setNotices] = useState<Notice[]>(noticesData);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
   const [filterStatus, setFilterStatus] = useState('Active');
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    fetchNotices();
+  }, []);
+
+  const fetchNotices = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await getNotices();
+      setNotices(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch notices');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddNotice = async (formData: NoticeCreatePayload) => {
+    try {
+      setActionLoading(true);
+      const newNotice = await createNotice(formData);
+      setNotices([newNotice, ...notices]);
+      setIsModalOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create notice');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleUpdateNotice = async (id: string, formData: NoticeUpdatePayload) => {
+    try {
+      setActionLoading(true);
+      const updated = await updateNotice(id, formData);
+      setNotices(notices.map(n => n.id === id ? updated : n));
+      setIsModalOpen(false);
+      setEditingId(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update notice');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteNotice = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this notice?')) return;
+    try {
+      setActionLoading(true);
+      await deleteNotice(id);
+      setNotices(notices.filter(n => n.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete notice');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleArchive = async (id: string) => {
+    try {
+      const updated = await toggleArchiveNotice(id);
+      setNotices(notices.map(n => n.id === id ? updated : n));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to toggle archive');
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    const normalizedType = type?.toUpperCase() || '';
+    switch (normalizedType) {
+      case 'EXAM':
+        return 'bg-red-100 text-red-800';
+      case 'ANNOUNCEMENT':
+        return 'bg-blue-100 text-blue-800';
+      case 'GENERAL':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const noticeTypes = ['All', ...Array.from(new Set(notices.map(n => n.type?.toUpperCase()).filter(Boolean)))];
 
   const filteredNotices = notices
     .filter(notice =>
       notice.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (filterType === 'All' || notice.type === filterType) &&
+      (filterType === 'All' || notice.type?.toUpperCase() === filterType.toUpperCase()) &&
       (filterStatus === 'All' || (filterStatus === 'Active' && !notice.isArchived) || (filterStatus === 'Archived' && notice.isArchived))
     )
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
@@ -48,51 +116,6 @@ export default function NoticesPage() {
   );
 
   const totalPages = Math.ceil(filteredNotices.length / itemsPerPage);
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'Exam':
-        return 'bg-red-100 text-red-800';
-      case 'Announcement':
-        return 'bg-blue-100 text-blue-800';
-      case 'General':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleEdit = (notice: Notice) => {
-    setSelectedNotice(notice);
-    setIsEditModalOpen(true);
-  };
-
-  const handleDelete = (id: number) => {
-    setNotices(notices.filter(n => n.id !== id));
-  };
-
-  const handleAddNotice = (formData: any) => {
-    const newNotice: Notice = {
-      id: Math.max(...notices.map(n => n.id), 0) + 1,
-      ...formData,
-      isArchived: false,
-      publishedAt: new Date().toISOString().split('T')[0],
-    };
-    setNotices([newNotice, ...notices]);
-    setIsAddModalOpen(false);
-  };
-
-  const handleUpdateNotice = (formData: any) => {
-    if (selectedNotice) {
-      setNotices(notices.map(notice =>
-        notice.id === selectedNotice.id
-          ? { ...notice, ...formData }
-          : notice
-      ));
-      setIsEditModalOpen(false);
-      setSelectedNotice(null);
-    }
-  };
 
   const isExpired = (expiryDate: string) => {
     return new Date(expiryDate) < new Date();
@@ -111,12 +134,24 @@ export default function NoticesPage() {
                 <p className="text-muted-foreground mt-1">Manage notices and announcements</p>
               </div>
               <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                onClick={() => {
+                  setEditingId(null);
+                  setIsModalOpen(true);
+                }}
+                disabled={actionLoading}
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
               >
                 <Plus size={20} /> Post Notice
               </button>
             </div>
+
+            {loading && <div className="text-center py-8 text-muted-foreground">Loading notices...</div>}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 text-sm">
+                {error}
+              </div>
+            )}
 
             {/* Filters */}
             <div className="bg-white border border-border rounded-lg p-4 space-y-4">
@@ -143,10 +178,9 @@ export default function NoticesPage() {
                   }}
                   className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="All">All Types</option>
-                  <option value="Exam">Exam</option>
-                  <option value="Announcement">Announcement</option>
-                  <option value="General">General</option>
+                  {noticeTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
                 </select>
 
                 <select
@@ -164,66 +198,80 @@ export default function NoticesPage() {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white border border-border rounded-lg overflow-hidden shadow-sm">
-              <table className="w-full text-sm">
-                <thead className="bg-muted border-b border-border">
-                  <tr>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Title</th>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Type</th>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Published</th>
-                    <th className="text-left py-4 px-6 font-semibold text-foreground">Expires</th>
-                    <th className="text-center py-4 px-6 font-semibold text-foreground">Status</th>
-                    <th className="text-center py-4 px-6 font-semibold text-foreground">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedNotices.map((notice) => (
-                    <tr key={notice.id} className={`border-b border-border hover:bg-muted transition-colors ${isExpired(notice.expiryDate) && !notice.isArchived ? 'opacity-60' : ''}`}>
-                      <td className="py-4 px-6 font-medium text-foreground">{notice.title}</td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getTypeColor(notice.type)}`}>
-                          {notice.type}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm">{notice.publishedAt}</td>
-                      <td className="py-4 px-6 text-muted-foreground text-sm">
-                        <div className="flex items-center gap-1">
-                          {isExpired(notice.expiryDate) && <Clock size={16} className="text-red-600" />}
-                          {notice.expiryDate}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-center">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${notice.isArchived
-                            ? 'bg-gray-100 text-gray-800'
-                            : isExpired(notice.expiryDate)
-                              ? 'bg-orange-100 text-orange-800'
-                              : 'bg-green-100 text-green-800'
-                          }`}>
-                          {notice.isArchived ? 'Archived' : isExpired(notice.expiryDate) ? 'Expired' : 'Active'}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleEdit(notice)}
-                            className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
-                          >
-                            <Edit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(notice.id)}
-                            className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {!loading && (
+              <>
+                {paginatedNotices.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No notices found
+                  </div>
+                ) : (
+                  <div className="bg-white border border-border rounded-lg overflow-hidden shadow-sm">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted border-b border-border">
+                        <tr>
+                          <th className="text-left py-4 px-6 font-semibold text-foreground">Title</th>
+                          <th className="text-left py-4 px-6 font-semibold text-foreground">Type</th>
+                          <th className="text-left py-4 px-6 font-semibold text-foreground">Published</th>
+                          <th className="text-left py-4 px-6 font-semibold text-foreground">Expires</th>
+                          <th className="text-center py-4 px-6 font-semibold text-foreground">Status</th>
+                          <th className="text-center py-4 px-6 font-semibold text-foreground">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedNotices.map((notice) => (
+                          <tr key={notice.id} className={`border-b border-border hover:bg-muted transition-colors ${isExpired(notice.expiresAt) && !notice.isArchived ? 'opacity-60' : ''}`}>
+                            <td className="py-4 px-6 font-medium text-foreground">{notice.title}</td>
+                            <td className="py-4 px-6">
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getTypeColor(notice.type)}`}>
+                                {notice.type}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-muted-foreground text-sm">{new Date(notice.publishedAt).toLocaleDateString()}</td>
+                            <td className="py-4 px-6 text-muted-foreground text-sm">
+                              <div className="flex items-center gap-1">
+                                {isExpired(notice.expiresAt) && <Clock size={16} className="text-red-600" />}
+                                {new Date(notice.expiresAt).toLocaleDateString()}
+                              </div>
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${notice.isArchived
+                                ? 'bg-gray-100 text-gray-800'
+                                : isExpired(notice.expiresAt)
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : 'bg-green-100 text-green-800'
+                                }`}>
+                                {notice.isArchived ? 'Archived' : isExpired(notice.expiresAt) ? 'Expired' : 'Active'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingId(notice.id);
+                                    setIsModalOpen(true);
+                                  }}
+                                  disabled={actionLoading}
+                                  className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  <Edit2 size={18} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteNotice(notice.id)}
+                                  disabled={actionLoading}
+                                  className="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
@@ -241,8 +289,8 @@ export default function NoticesPage() {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`px-3 py-2 rounded-lg ${currentPage === page
-                          ? 'bg-primary text-primary-foreground'
-                          : 'border border-border hover:bg-muted'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border border-border hover:bg-muted'
                         }`}
                     >
                       {page}
@@ -262,51 +310,61 @@ export default function NoticesPage() {
         </main>
       </div>
 
-      {/* Add Modal */}
       <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Post New Notice"
-      >
-        <NoticeForm onSubmit={handleAddNotice} onCancel={() => setIsAddModalOpen(false)} />
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Edit Notice"
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingId(null);
+        }}
+        title={editingId ? 'Edit Notice' : 'Post New Notice'}
       >
         <NoticeForm
-          initialData={selectedNotice || undefined}
-          onSubmit={handleUpdateNotice}
-          onCancel={() => setIsEditModalOpen(false)}
+          notice={editingId ? notices.find(n => n.id === editingId) : undefined}
+          onSubmit={(formData) => {
+            if (editingId) {
+              handleUpdateNotice(editingId, formData);
+            } else {
+              handleAddNotice(formData as NoticeCreatePayload);
+            }
+          }}
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditingId(null);
+          }}
+          isLoading={actionLoading}
         />
       </Modal>
     </div>
   );
 }
 
-function NoticeForm({
-  initialData,
-  onSubmit,
-  onCancel,
-}: {
-  initialData?: Notice;
-  onSubmit: (data: any) => void;
+interface NoticeFormProps {
+  notice?: Notice;
+  onSubmit: (data: NoticeUpdatePayload | NoticeCreatePayload) => void;
   onCancel: () => void;
-}) {
+  isLoading?: boolean;
+}
+
+function NoticeForm({ notice, onSubmit, onCancel, isLoading }: NoticeFormProps) {
   const [formData, setFormData] = useState({
-    title: initialData?.title || '',
-    type: initialData?.type || 'General',
-    body: initialData?.body || '',
-    expiryDate: initialData?.expiryDate || '',
-    isArchived: initialData?.isArchived || false,
+    title: notice?.title || '',
+    type: notice?.type || 'GENERAL',
+    content: notice?.content || '',
+    publishedAt: notice?.publishedAt ? notice.publishedAt.split('T')[0] : '',
+    expiresAt: notice?.expiresAt ? notice.expiresAt.split('T')[0] : '',
+    isActive: notice?.isActive !== false,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({
+      title: formData.title,
+      type: formData.type,
+      content: formData.content,
+      publishedAt: formData.publishedAt ? new Date(formData.publishedAt).toISOString() : new Date().toISOString(),
+      expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : new Date().toISOString(),
+      isActive: formData.isActive,
+    });
   };
 
   return (
@@ -317,7 +375,8 @@ function NoticeForm({
           type="text"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+          disabled={isLoading}
           required
         />
       </div>
@@ -327,35 +386,50 @@ function NoticeForm({
           <label className="block text-sm font-medium text-foreground mb-2">Type</label>
           <select
             value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'Exam' | 'Announcement' | 'General' })}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+            disabled={isLoading}
             required
           >
-            <option value="Exam">Exam</option>
-            <option value="Announcement">Announcement</option>
-            <option value="General">General</option>
+            <option value="EXAM">Exam</option>
+            <option value="ANNOUNCEMENT">Announcement</option>
+            <option value="GENERAL">General</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Expiry Date</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Published Date</label>
           <input
             type="date"
-            value={formData.expiryDate}
-            onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            value={formData.publishedAt}
+            onChange={(e) => setFormData({ ...formData, publishedAt: e.target.value })}
+            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+            disabled={isLoading}
             required
           />
         </div>
       </div>
 
       <div>
+        <label className="block text-sm font-medium text-foreground mb-2">Expiry Date</label>
+        <input
+          type="date"
+          value={formData.expiresAt}
+          onChange={(e) => setFormData({ ...formData, expiresAt: e.target.value })}
+          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+          disabled={isLoading}
+          required
+        />
+      </div>
+
+      <div>
         <label className="block text-sm font-medium text-foreground mb-2">Content</label>
         <textarea
-          value={formData.body}
-          onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          value={formData.content}
+          onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
           rows={5}
+          disabled={isLoading}
           required
         />
       </div>
@@ -363,25 +437,28 @@ function NoticeForm({
       <div className="flex items-center gap-2">
         <input
           type="checkbox"
-          id="archived"
-          checked={formData.isArchived}
-          onChange={(e) => setFormData({ ...formData, isArchived: e.target.checked })}
-          className="w-4 h-4 rounded"
+          id="active"
+          checked={formData.isActive}
+          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+          className="w-4 h-4 rounded disabled:opacity-50"
+          disabled={isLoading}
         />
-        <label htmlFor="archived" className="text-sm text-foreground">Mark as Archived</label>
+        <label htmlFor="active" className="text-sm text-foreground">Active</label>
       </div>
 
       <div className="flex gap-2 pt-4">
         <button
           type="submit"
-          className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          disabled={isLoading}
+          className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
-          {initialData ? 'Update' : 'Post'} Notice
+          {isLoading ? (notice ? 'Updating...' : 'Posting...') : notice ? 'Update' : 'Post'} Notice
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-muted text-foreground px-4 py-2 rounded-lg hover:bg-muted/80 transition-colors"
+          disabled={isLoading}
+          className="flex-1 bg-muted text-foreground px-4 py-2 rounded-lg hover:bg-muted/80 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
