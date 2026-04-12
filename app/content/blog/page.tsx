@@ -99,7 +99,7 @@ export default function BlogPage() {
           metaDescription: formData.metaDescription || formData.excerpt,
           categoryId: formData.categoryId,
           isPublished: formData.isPublished || false,
-          publishedAt: formData.publishedAt,
+          publishedAt: formData.publishedAt || undefined,
         };
         if (selectedImage) payload.coverImage = selectedImage;
 
@@ -115,7 +115,7 @@ export default function BlogPage() {
           metaDescription: formData.metaDescription || formData.excerpt || '',
           categoryId: formData.categoryId || '',
           isPublished: formData.isPublished || false,
-          publishedAt: formData.publishedAt,
+          publishedAt: formData.publishedAt || undefined,
         };
         if (selectedImage) payload.coverImage = selectedImage;
 

@@ -80,6 +80,14 @@ export default function AchievementsPage() {
     }
   };
 
+  const handleSubmitAchievement = async (data: AchievementCreatePayload | AchievementUpdatePayload) => {
+    if (editingId) {
+      await handleUpdateAchievement(data as AchievementUpdatePayload);
+    } else {
+      await handleAddAchievement(data as AchievementCreatePayload);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -134,7 +142,7 @@ export default function AchievementsPage() {
         <AchievementForm
           initialData={editingId ? (achievements.find(a => a.id === editingId) || undefined) : undefined}
           isEdit={!!editingId}
-          onSubmit={editingId ? handleUpdateAchievement : handleAddAchievement}
+          onSubmit={handleSubmitAchievement}
           onCancel={() => setIsModalOpen(false)}
           isLoading={actionLoading}
         />
@@ -146,7 +154,7 @@ export default function AchievementsPage() {
 interface AchievementFormProps {
   initialData?: Achievement;
   isEdit: boolean;
-  onSubmit: (data: AchievementCreatePayload | AchievementUpdatePayload) => void;
+  onSubmit: (data: AchievementCreatePayload | AchievementUpdatePayload) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -180,14 +188,14 @@ function AchievementForm({ initialData, isEdit, onSubmit, onCancel, isLoading = 
     setImagePreview('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const submitData = {
       ...formData,
       year: parseInt(formData.year),
       ...(imageFile && { image: imageFile }),
     };
-    onSubmit(submitData);
+    await onSubmit(submitData);
   };
 
   return (

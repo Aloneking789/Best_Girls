@@ -104,6 +104,14 @@ export default function EventsPage() {
     }
   };
 
+  const handleSubmitEvent = async (data: EventCreatePayload | EventUpdatePayload) => {
+    if (selectedEvent) {
+      await handleUpdateEvent(data as EventUpdatePayload);
+    } else {
+      await handleAddEvent(data as EventCreatePayload);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -277,7 +285,7 @@ export default function EventsPage() {
         onClose={() => !actionLoading && setIsAddModalOpen(false)}
         title="Add New Event"
       >
-        <EventForm onSubmit={handleAddEvent} onCancel={() => setIsAddModalOpen(false)} isLoading={actionLoading} />
+        <EventForm onSubmit={handleSubmitEvent} onCancel={() => setIsAddModalOpen(false)} isLoading={actionLoading} />
       </Modal>
 
       {/* Edit Modal */}
@@ -288,7 +296,7 @@ export default function EventsPage() {
       >
         <EventForm
           initialData={selectedEvent || undefined}
-          onSubmit={handleUpdateEvent}
+          onSubmit={handleSubmitEvent}
           onCancel={() => setIsEditModalOpen(false)}
           isLoading={actionLoading}
         />
@@ -299,7 +307,7 @@ export default function EventsPage() {
 
 interface EventFormProps {
   initialData?: Event;
-  onSubmit: (data: EventCreatePayload | EventUpdatePayload) => void;
+  onSubmit: (data: EventCreatePayload | EventUpdatePayload) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -341,13 +349,13 @@ function EventForm({
     setCoverImagePreview('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const submitData = {
       ...formData,
       ...(coverImageFile && { coverImage: coverImageFile }),
     };
-    onSubmit(submitData);
+    await onSubmit(submitData);
   };
 
   return (
