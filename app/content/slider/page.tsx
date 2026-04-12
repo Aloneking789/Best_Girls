@@ -218,8 +218,8 @@ export default function SliderPage() {
                         {filteredSlides.map(slide => (
                           <tr key={slide.id} className="border-b border-border hover:bg-muted/50">
                             <td className="py-4 px-4">
-                              <img 
-                                src={slide.imageUrl} 
+                              <img
+                                src={slide.imageUrl}
                                 alt={slide.title}
                                 className="w-16 h-16 object-cover rounded"
                               />

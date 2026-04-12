@@ -73,10 +73,10 @@ export default function Header({ breadcrumbs, breadcrumb }: HeaderProps) {
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
                 {user?.name
                   ? user.name
-                      .split(' ')
-                      .map((n: string) => n[0])
-                      .join('')
-                      .toUpperCase()
+                    .split(' ')
+                    .map((n: string) => n[0])
+                    .join('')
+                    .toUpperCase()
                   : 'AD'}
               </div>
             </button>

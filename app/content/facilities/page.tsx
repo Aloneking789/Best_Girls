@@ -278,8 +278,8 @@ export default function FacilitiesPage() {
                           key={i + 1}
                           onClick={() => setCurrentPage(i + 1)}
                           className={`px-3 py-2 rounded-lg ${currentPage === i + 1
-                              ? 'bg-primary text-primary-foreground'
-                              : 'border border-border hover:bg-muted'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'border border-border hover:bg-muted'
                             }`}
                         >
                           {i + 1}
