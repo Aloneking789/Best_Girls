@@ -123,11 +123,10 @@ export default function StudentCornerPage() {
                     setActiveTab(tab.id);
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2 font-medium transition-colors ${
-                    activeTab === tab.id
+                  className={`px-4 py-2 font-medium transition-colors ${activeTab === tab.id
                       ? 'text-primary border-b-2 border-primary'
                       : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -269,11 +268,10 @@ export default function StudentCornerPage() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-2 rounded-lg ${
-                        currentPage === page
+                      className={`px-3 py-2 rounded-lg ${currentPage === page
                           ? 'bg-primary text-primary-foreground'
                           : 'border border-border hover:bg-muted'
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>

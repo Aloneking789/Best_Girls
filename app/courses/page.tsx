@@ -207,11 +207,10 @@ export default function CoursesPage() {
                       <td className="py-4 px-6 text-center">
                         <button
                           onClick={() => toggleStatus(course.id)}
-                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                            course.status === 'Active'
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold transition-colors ${course.status === 'Active'
                               ? 'bg-green-100 text-green-800 hover:bg-green-200'
                               : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                          }`}
+                            }`}
                         >
                           <div className={`w-2 h-2 rounded-full ${course.status === 'Active' ? 'bg-green-600' : 'bg-gray-600'}`} />
                           {course.status}
@@ -254,11 +253,10 @@ export default function CoursesPage() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-2 rounded-lg ${
-                        currentPage === page
+                      className={`px-3 py-2 rounded-lg ${currentPage === page
                           ? 'bg-primary text-primary-foreground'
                           : 'border border-border hover:bg-muted'
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>

@@ -194,13 +194,12 @@ export default function NoticesPage() {
                         </div>
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          notice.isArchived
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${notice.isArchived
                             ? 'bg-gray-100 text-gray-800'
                             : isExpired(notice.expiryDate)
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-green-100 text-green-800'
-                        }`}>
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-green-100 text-green-800'
+                          }`}>
                           {notice.isArchived ? 'Archived' : isExpired(notice.expiryDate) ? 'Expired' : 'Active'}
                         </span>
                       </td>
@@ -241,11 +240,10 @@ export default function NoticesPage() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-2 rounded-lg ${
-                        currentPage === page
+                      className={`px-3 py-2 rounded-lg ${currentPage === page
                           ? 'bg-primary text-primary-foreground'
                           : 'border border-border hover:bg-muted'
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>

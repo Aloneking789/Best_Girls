@@ -182,11 +182,10 @@ export default function EventsPage() {
                       <td className="py-4 px-6 text-center">
                         <button
                           onClick={() => toggleFeatured(event.id)}
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
-                            event.isFeatured
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold transition-colors ${event.isFeatured
                               ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
                               : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                          }`}
+                            }`}
                         >
                           {event.isFeatured ? '⭐ Featured' : 'Not Featured'}
                         </button>
@@ -228,11 +227,10 @@ export default function EventsPage() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-2 rounded-lg ${
-                        currentPage === page
+                      className={`px-3 py-2 rounded-lg ${currentPage === page
                           ? 'bg-primary text-primary-foreground'
                           : 'border border-border hover:bg-muted'
-                      }`}
+                        }`}
                     >
                       {page}
                     </button>
