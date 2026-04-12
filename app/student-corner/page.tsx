@@ -200,7 +200,7 @@ export default function StudentCornerPage() {
                       <td className="py-4 px-6 text-muted-foreground text-sm">{item.postedDate}</td>
                       <td className="py-4 px-6">
                         <div className="flex items-center justify-center gap-2">
-                          {item.externalUrl && (
+                          {activeTab === 'items' && 'externalUrl' in item && item.externalUrl && (
                             <a
                               href={item.externalUrl}
                               target="_blank"
@@ -211,10 +211,21 @@ export default function StudentCornerPage() {
                               <Download size={18} />
                             </a>
                           )}
+                          {activeTab === 'downloads' && 'url' in item && item.url && (
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 hover:bg-green-100 text-green-600 rounded-lg transition-colors"
+                              title="Download"
+                            >
+                              <Download size={18} />
+                            </a>
+                          )}
                           {activeTab === 'items' && (
                             <>
                               <button
-                                onClick={() => handleEdit(item)}
+                                onClick={() => handleEdit(item as StudentItem)}
                                 className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
                               >
                                 <Edit2 size={18} />

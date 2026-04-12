@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Sidebar from '@/components/sidebar';
 import Header from '@/components/header';
 import Modal from '@/components/modal';
-import { Plus, Edit2, Trash2, Search, Filter, Toggle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Filter } from 'lucide-react';
 
 interface Course {
   id: number;

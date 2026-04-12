@@ -336,7 +336,7 @@ function EventForm({
           <label className="block text-sm font-medium text-foreground mb-2">Status</label>
           <select
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Upcoming' | 'Ongoing' | 'Completed' })}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="Upcoming">Upcoming</option>

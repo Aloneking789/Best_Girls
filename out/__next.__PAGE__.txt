@@ -1,0 +1,8 @@
+1:"$Sreact.fragment"
+2:I[88349,["/_next/static/chunks/0g3-5t4lqvb8t.js","/_next/static/chunks/0n5psz1wgdu_o.js","/_next/static/chunks/0oip0gs7xzett.js","/_next/static/chunks/0tlage3_5s210.js"],"default"]
+3:I[43794,["/_next/static/chunks/0g3-5t4lqvb8t.js","/_next/static/chunks/0n5psz1wgdu_o.js","/_next/static/chunks/0oip0gs7xzett.js","/_next/static/chunks/0tlage3_5s210.js"],"default"]
+4:I[295,["/_next/static/chunks/0g3-5t4lqvb8t.js","/_next/static/chunks/0n5psz1wgdu_o.js","/_next/static/chunks/0oip0gs7xzett.js","/_next/static/chunks/0tlage3_5s210.js"],"default"]
+5:I[30033,["/_next/static/chunks/0g3-5t4lqvb8t.js","/_next/static/chunks/0n5psz1wgdu_o.js"],"OutletBoundary"]
+6:"$Sreact.suspense"
+0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"flex h-screen bg-background","children":[["$","$L2",null,{}],["$","div",null,{"className":"flex-1 flex flex-col md:ml-0","children":[["$","$L3",null,{"breadcrumbs":[{"label":"Dashboard"}]}],["$","main",null,{"className":"flex-1 overflow-y-auto","children":["$","$L4",null,{}]}]]}]]}],[["$","script","script-0",{"src":"/_next/static/chunks/0oip0gs7xzett.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/0tlage3_5s210.js","async":true}]],["$","$L5",null,{"children":["$","$6",null,{"name":"Next.MetadataOutlet","children":"$@7"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"DBIfY8LsUnKf7tndawfbh"}
+7:null

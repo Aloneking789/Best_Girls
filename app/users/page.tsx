@@ -365,19 +365,35 @@ function UserForm({
   );
 }
 
+type Action = 'view' | 'add' | 'edit' | 'delete';
+
+type PermissionSet = {
+  view: boolean;
+  add: boolean;
+  edit: boolean;
+  delete: boolean;
+};
+
+type PermissionsType = {
+  [key: string]: PermissionSet;
+};
+
 function PermissionsForm({ user, onClose }: { user: User; onClose: () => void }) {
-  const [permissions, setPermissions] = useState({
-    'Content': { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
-    'Courses': { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
-    'Faculty': { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
-    'Admissions': { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
+  const [permissions, setPermissions] = useState<PermissionsType>({
+    Content: { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
+    Courses: { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
+    Faculty: { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
+    Admissions: { view: true, add: user.role !== 'Viewer', edit: user.role === 'Admin', delete: user.role === 'Admin' },
   });
 
-  const togglePermission = (module: string, action: string) => {
-    setPermissions({
-      ...permissions,
-      [module]: { ...permissions[module], [action]: !permissions[module][action] },
-    });
+  const togglePermission = (module: string, action: Action) => {
+    setPermissions((prev) => ({
+      ...prev,
+      [module]: {
+        ...prev[module],
+        [action]: !prev[module][action],
+      },
+    }));
   };
 
   return (
@@ -385,18 +401,23 @@ function PermissionsForm({ user, onClose }: { user: User; onClose: () => void })
       {Object.entries(permissions).map(([module, actions]) => (
         <div key={module} className="border border-border rounded-lg p-4">
           <h3 className="font-semibold text-foreground mb-3">{module}</h3>
+
           <div className="grid grid-cols-4 gap-2">
-            {Object.entries(actions).map(([action, enabled]) => (
-              <label key={action} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={() => togglePermission(module, action)}
-                  className="w-4 h-4 rounded"
-                />
-                <span className="text-sm capitalize text-foreground">{action}</span>
-              </label>
-            ))}
+            {Object.entries(actions).map(([action, enabled]) => {
+              const act = action as Action;
+
+              return (
+                <label key={action} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={() => togglePermission(module, act)}
+                    className="w-4 h-4 rounded"
+                  />
+                  <span className="text-sm capitalize text-foreground">{action}</span>
+                </label>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -409,6 +430,7 @@ function PermissionsForm({ user, onClose }: { user: User; onClose: () => void })
         >
           Save Permissions
         </button>
+
         <button
           type="button"
           onClick={onClose}

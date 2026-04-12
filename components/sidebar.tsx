@@ -2,18 +2,31 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Menu, X, LayoutDashboard, FileText, BookOpen, Users, Settings, Briefcase, GraduationCap, Bell, ChevronDown, Code2, Lock } from 'lucide-react';
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  FileText,
+  BookOpen,
+  Users,
+  Settings,
+  GraduationCap,
+  Bell,
+  ChevronDown,
+  Code2
+} from 'lucide-react';
 
 interface NavItem {
   label: string;
   href?: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode; // ✅ FIXED (optional)
   badge?: number;
   children?: NavItem[];
 }
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: <LayoutDashboard size={20} /> },
+
   {
     label: 'Content & Website',
     icon: <FileText size={20} />,
@@ -28,11 +41,13 @@ const navItems: NavItem[] = [
       { label: 'Gallery', href: '/content/gallery' },
       { label: 'Achievements', href: '/content/achievements' },
       { label: 'Placements', href: '/content/placements' },
-    ]
+    ],
   },
+
   { label: 'Courses', href: '/courses', icon: <BookOpen size={20} /> },
   { label: 'Faculty', href: '/faculty', icon: <Users size={20} /> },
   { label: 'Events', href: '/events', icon: <Bell size={20} /> },
+
   {
     label: 'Admissions & Leads',
     icon: <GraduationCap size={20} />,
@@ -40,10 +55,12 @@ const navItems: NavItem[] = [
       { label: 'Admissions', href: '/admissions' },
       { label: 'Contact Leads', href: '/leads' },
       { label: 'AI Admission Assistant', href: '/admissions/ai-assistant' },
-    ]
+    ],
   },
+
   { label: 'Notice Board', href: '/notices', icon: <Bell size={20} /> },
   { label: 'Student Corner', href: '/student-corner', icon: <Code2 size={20} /> },
+
   {
     label: 'Users & Roles',
     icon: <Users size={20} />,
@@ -52,8 +69,9 @@ const navItems: NavItem[] = [
       { label: 'User Management', href: '/users' },
       { label: 'Roles', href: '/users/roles' },
       { label: 'Permissions', href: '/users/permissions' },
-    ]
+    ],
   },
+
   { label: 'Settings', href: '/settings', icon: <Settings size={20} /> },
 ];
 
@@ -88,7 +106,9 @@ export default function Sidebar() {
         {/* Logo */}
         <div className="p-6 border-b border-sidebar-border">
           <h1 className="text-2xl font-bold text-sidebar-primary">College CMS</h1>
-          <p className="text-xs text-sidebar-foreground/60 mt-1">Admin Panel v1.0</p>
+          <p className="text-xs text-sidebar-foreground/60 mt-1">
+            Admin Panel v1.0
+          </p>
         </div>
 
         {/* Navigation */}
@@ -99,18 +119,22 @@ export default function Sidebar() {
                 <>
                   <button
                     onClick={() => {
-                      setExpandedItems(prev =>
+                      setExpandedItems((prev) =>
                         prev.includes(item.label)
-                          ? prev.filter(i => i !== item.label)
+                          ? prev.filter((i) => i !== item.label)
                           : [...prev, item.label]
                       );
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors group"
                   >
                     <span className="text-sidebar-foreground group-hover:text-sidebar-accent-foreground">
-                      {item.icon}
+                      {item.icon && item.icon}
                     </span>
-                    <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+
+                    <span className="text-sm font-medium flex-1 text-left">
+                      {item.label}
+                    </span>
+
                     <ChevronDown
                       size={18}
                       className={`transition-transform ${
@@ -118,6 +142,7 @@ export default function Sidebar() {
                       }`}
                     />
                   </button>
+
                   {expandedItems.includes(item.label) && (
                     <div className="bg-sidebar-accent/50 rounded-lg mt-1 overflow-hidden">
                       {item.children.map((child) => (
@@ -141,9 +166,13 @@ export default function Sidebar() {
                   className="flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors group"
                 >
                   <span className="text-sidebar-foreground group-hover:text-sidebar-accent-foreground">
-                    {item.icon}
+                    {item.icon && item.icon}
                   </span>
-                  <span className="text-sm font-medium flex-1">{item.label}</span>
+
+                  <span className="text-sm font-medium flex-1">
+                    {item.label}
+                  </span>
+
                   {item.badge && (
                     <span className="bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
                       {item.badge}
@@ -158,7 +187,7 @@ export default function Sidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-sidebar-border">
           <p className="text-xs text-sidebar-foreground/60 text-center">
-            © 2024 College CMS
+            © 2026 College CMS
           </p>
         </div>
       </aside>

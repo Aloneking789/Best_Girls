@@ -329,7 +329,7 @@ function NoticeForm({
           <label className="block text-sm font-medium text-foreground mb-2">Type</label>
           <select
             value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'Exam' | 'Announcement' | 'General' })}
             className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             required
           >

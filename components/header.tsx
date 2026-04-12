@@ -3,14 +3,24 @@
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
 
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
 interface HeaderProps {
-  breadcrumbs?: Array<{ label: string; href?: string }>;
-  breadcrumb?: string[];
+  breadcrumbs?: BreadcrumbItem[];
+  breadcrumb?: string[]; // ✅ FIX: make this string[]
 }
 
 export default function Header({ breadcrumbs, breadcrumb }: HeaderProps) {
-  // Support both breadcrumbs (array of objects) and breadcrumb (array of strings)
-  const finalBreadcrumbs = breadcrumbs || (breadcrumb ? breadcrumb.map(b => ({ label: b })) : [{ label: 'Dashboard' }]);
+  // ✅ FIXED LOGIC
+  const finalBreadcrumbs: BreadcrumbItem[] =
+    breadcrumbs ||
+    (breadcrumb
+      ? breadcrumb.map((b) => ({ label: b }))
+      : [{ label: 'Dashboard' }]);
+
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   return (
@@ -22,7 +32,10 @@ export default function Header({ breadcrumbs, breadcrumb }: HeaderProps) {
           {finalBreadcrumbs.map((item, idx) => (
             <div key={idx} className="flex items-center gap-2">
               {idx > 0 && <span className="text-muted-foreground">/</span>}
-              <a href={item.href || '#'} className="text-muted-foreground hover:text-foreground transition-colors">
+              <a
+                href={item.href || '#'}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
                 {item.label}
               </a>
             </div>
@@ -65,10 +78,13 @@ export default function Header({ breadcrumbs, breadcrumb }: HeaderProps) {
                 <button className="w-full px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2">
                   <User size={16} /> Profile
                 </button>
+
                 <button className="w-full px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2">
                   <Settings size={16} /> Settings
                 </button>
+
                 <div className="border-t border-border my-2" />
+
                 <button className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
                   <LogOut size={16} /> Logout
                 </button>
