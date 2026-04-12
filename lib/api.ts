@@ -1917,3 +1917,241 @@ export const updateSettings = async (payload: SettingsUpdatePayload): Promise<Se
     throw error;
   }
 };
+
+// ==================== USER MANAGEMENT ENDPOINTS ====================
+
+export interface UserRole {
+  id: string;
+  name: string;
+  permissions: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  roleId: string;
+  role: UserRole;
+  permissions: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserCreatePayload {
+  name: string;
+  email: string;
+  password: string;
+  roleId: string;
+  image?: File;
+}
+
+export interface UserUpdatePayload {
+  name?: string;
+  email?: string;
+  password?: string;
+  roleId?: string;
+  image?: File;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+}
+
+export interface RoleCreatePayload {
+  name: string;
+}
+
+export interface RoleUpdatePayload {
+  name?: string;
+}
+
+// Get all users
+export const getUsers = async (): Promise<User[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/um/users`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+};
+
+// Create user with image upload
+export const createUser = async (payload: UserCreatePayload): Promise<User> => {
+  try {
+    const formData = new FormData();
+    formData.append('name', payload.name);
+    formData.append('email', payload.email);
+    formData.append('password', payload.password);
+    formData.append('roleId', payload.roleId);
+    if (payload.image) {
+      formData.append('image', payload.image);
+    }
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/um/users`, {
+      method: 'POST',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create user');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+};
+
+// Update user
+export const updateUser = async (id: string, payload: UserUpdatePayload): Promise<User> => {
+  try {
+    const formData = new FormData();
+    if (payload.name) formData.append('name', payload.name);
+    if (payload.email) formData.append('email', payload.email);
+    if (payload.password) formData.append('password', payload.password);
+    if (payload.roleId) formData.append('roleId', payload.roleId);
+    if (payload.image) {
+      formData.append('image', payload.image);
+    }
+
+    const token = getToken();
+    const response = await fetch(`${API_BASE_URL}/um/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update user');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+};
+
+// Delete user
+export const deleteUser = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/um/users/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete user');
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+};
+
+// ==================== ROLE MANAGEMENT ENDPOINTS ====================
+
+// Get all roles
+export const getRoles = async (): Promise<Role[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/um/roles`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch roles');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    throw error;
+  }
+};
+
+// Create role
+export const createRole = async (payload: RoleCreatePayload): Promise<Role> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/um/users/roles`, {
+      method: 'POST',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create role');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating role:', error);
+    throw error;
+  }
+};
+
+// Update role
+export const updateRole = async (id: string, payload: RoleUpdatePayload): Promise<Role> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/um/roles/${id}`, {
+      method: 'PUT',
+      headers: getHeaders(true),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update role');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating role:', error);
+    throw error;
+  }
+};
+
+// Delete role
+export const deleteRole = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/um/roles/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete role');
+    }
+  } catch (error) {
+    console.error('Error deleting role:', error);
+    throw error;
+  }
+};

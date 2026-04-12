@@ -152,30 +152,30 @@ export default function PlacementsPage() {
         </main>
       </div>
 
-    <Modal
-      isOpen={isModalOpen}
-      onClose={() => {
-        setIsModalOpen(false);
-        setEditingId(null);
-      }}
-      title={editingId ? 'Edit Placement' : 'Add Placement'}
-    >
-      <PlacementForm
-        placement={editingId ? placements.find(p => p.id === editingId) : undefined}
-        onSubmit={(formData) => {
-          if (editingId) {
-            handleUpdatePlacement(editingId, formData);
-          } else {
-            handleAddPlacement(formData as PlacementCreatePayload);
-          }
-        }}
-        onCancel={() => {
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => {
           setIsModalOpen(false);
           setEditingId(null);
         }}
-        isLoading={actionLoading}
-      />
-    </Modal>
+        title={editingId ? 'Edit Placement' : 'Add Placement'}
+      >
+        <PlacementForm
+          placement={editingId ? placements.find(p => p.id === editingId) : undefined}
+          onSubmit={(formData) => {
+            if (editingId) {
+              handleUpdatePlacement(editingId, formData);
+            } else {
+              handleAddPlacement(formData as PlacementCreatePayload);
+            }
+          }}
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditingId(null);
+          }}
+          isLoading={actionLoading}
+        />
+      </Modal>
     </div>
   );
 }
