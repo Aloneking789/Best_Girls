@@ -2,6 +2,7 @@
 
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/lib/auth-context';
 
 interface BreadcrumbItem {
   label: string;
@@ -22,6 +23,7 @@ export default function Header({ breadcrumbs, breadcrumb }: HeaderProps) {
       : [{ label: 'Dashboard' }]);
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const { logout, user } = useAuth();
 
   return (
     <header className="sticky top-0 z-20 bg-white border-b border-border shadow-sm">
@@ -68,13 +70,24 @@ export default function Header({ breadcrumbs, breadcrumb }: HeaderProps) {
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-2 p-2 hover:bg-muted rounded-lg transition-colors"
             >
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold">
-                AD
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-bold text-sm">
+                {user?.name
+                  ? user.name
+                      .split(' ')
+                      .map((n: string) => n[0])
+                      .join('')
+                      .toUpperCase()
+                  : 'AD'}
               </div>
             </button>
 
             {showProfileMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-border rounded-lg shadow-lg py-2 z-50">
+                <div className="px-4 py-2 border-b border-border">
+                  <p className="text-sm font-semibold text-foreground">{user?.name || 'Admin'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                </div>
+
                 <button className="w-full px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2">
                   <User size={16} /> Profile
                 </button>
@@ -85,7 +98,13 @@ export default function Header({ breadcrumbs, breadcrumb }: HeaderProps) {
 
                 <div className="border-t border-border my-2" />
 
-                <button className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setShowProfileMenu(false);
+                    logout();
+                  }}
+                  className="w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
                   <LogOut size={16} /> Logout
                 </button>
               </div>
