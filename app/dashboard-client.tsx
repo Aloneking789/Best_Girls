@@ -84,7 +84,7 @@ export default function DashboardClient() {
               icon={<GraduationCap size={24} />}
               trend="up"
               trendValue={12}
-              color="purple"
+              color="red"
             />
           </div>
         </>
@@ -92,3 +92,4 @@ export default function DashboardClient() {
     </div>
   );
 }
+

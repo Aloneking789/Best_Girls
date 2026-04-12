@@ -184,8 +184,8 @@ export default function LeadsPage() {
                         <td className="py-4 px-6 text-muted-foreground text-sm">{inquiry.phone}</td>
                         <td className="py-4 px-6 text-center">
                           <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${inquiry.status === 'PENDING'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-green-100 text-green-800'
                             }`}>
                             {inquiry.status}
                           </span>
@@ -236,8 +236,8 @@ export default function LeadsPage() {
                       key={page}
                       onClick={() => setCurrentPage(page)}
                       className={`px-3 py-2 rounded-lg ${currentPage === page
-                          ? 'bg-primary text-primary-foreground'
-                          : 'border border-border hover:bg-muted'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border border-border hover:bg-muted'
                         }`}
                     >
                       {page}
@@ -315,8 +315,8 @@ export default function LeadsPage() {
                     onClick={() => handleStatusChange(status)}
                     disabled={actionLoading}
                     className={`px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 ${selectedInquiry.status === status
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground hover:bg-muted/80'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
                       }`}
                   >
                     {status === 'PENDING' ? '⏳ Pending' : '✓ Resolved'}

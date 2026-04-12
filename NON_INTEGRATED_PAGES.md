@@ -9,6 +9,7 @@
 **Purpose:** Main dashboard with analytics, metrics, charts, and real-time data summaries
 
 **Required API Endpoints:**
+
 - `GET /dashboard/metrics` - Fetch dashboard metrics (admissions, leads, etc.)
 - `GET /dashboard/trends` - Fetch activity trends data for charts
 - `GET /dashboard/admission-status` - Fetch admission status breakdown
@@ -17,6 +18,7 @@
 - `GET /dashboard/latest-notices` - Fetch latest notices
 
 **Expected Data Structure:**
+
 ```typescript
 DashboardMetrics {
   totalAdmissions: number
@@ -84,6 +86,7 @@ DashboardResponse {
 ```
 
 **Sample Complete API Response (Single Endpoint):**
+
 ```json
 {
   "success": true,
@@ -244,13 +247,19 @@ DashboardResponse {
 ```
 
 **Alternative: Optimized Single Response (Recommended)**
+
 ```json
 {
   "success": true,
   "data": {
     "dashboard": {
       "metrics": {
-        "admissions": { "total": 342, "pending": 28, "trend": "up", "trendValue": 12 },
+        "admissions": {
+          "total": 342,
+          "pending": 28,
+          "trend": "up",
+          "trendValue": 12
+        },
         "leads": { "total": 156, "unread": 12, "trend": "up", "trendValue": 8 },
         "events": { "total": 45, "trend": "neutral" },
         "faculty": { "total": 85, "trend": "up", "trendValue": 5 },
@@ -279,22 +288,94 @@ DashboardResponse {
       },
       "tables": {
         "recentAdmissions": [
-          { "id": "adm_1", "name": "John Smith", "status": "Approved", "date": "2024-04-10", "course": "B.Tech" },
-          { "id": "adm_2", "name": "Sarah Johnson", "status": "Pending", "date": "2024-04-09", "course": "MBA" },
-          { "id": "adm_3", "name": "Mike Davis", "status": "Approved", "date": "2024-04-08", "course": "B.Tech" },
-          { "id": "adm_4", "name": "Emma Wilson", "status": "Pending", "date": "2024-04-07", "course": "M.Tech" },
-          { "id": "adm_5", "name": "Alex Brown", "status": "Rejected", "date": "2024-04-06", "course": "PhD" }
+          {
+            "id": "adm_1",
+            "name": "John Smith",
+            "status": "Approved",
+            "date": "2024-04-10",
+            "course": "B.Tech"
+          },
+          {
+            "id": "adm_2",
+            "name": "Sarah Johnson",
+            "status": "Pending",
+            "date": "2024-04-09",
+            "course": "MBA"
+          },
+          {
+            "id": "adm_3",
+            "name": "Mike Davis",
+            "status": "Approved",
+            "date": "2024-04-08",
+            "course": "B.Tech"
+          },
+          {
+            "id": "adm_4",
+            "name": "Emma Wilson",
+            "status": "Pending",
+            "date": "2024-04-07",
+            "course": "M.Tech"
+          },
+          {
+            "id": "adm_5",
+            "name": "Alex Brown",
+            "status": "Rejected",
+            "date": "2024-04-06",
+            "course": "PhD"
+          }
         ],
         "recentLeads": [
-          { "id": "lead_1", "name": "Lisa Anderson", "date": "2024-04-10", "read": false, "email": "lisa@example.com" },
-          { "id": "lead_2", "name": "Tom Harris", "date": "2024-04-09", "read": true, "email": "tom@example.com" },
-          { "id": "lead_3", "name": "Jessica Lee", "date": "2024-04-08", "read": false, "email": "jessica@example.com" },
-          { "id": "lead_4", "name": "David Miller", "date": "2024-04-07", "read": true, "email": "david@example.com" }
+          {
+            "id": "lead_1",
+            "name": "Lisa Anderson",
+            "date": "2024-04-10",
+            "read": false,
+            "email": "lisa@example.com"
+          },
+          {
+            "id": "lead_2",
+            "name": "Tom Harris",
+            "date": "2024-04-09",
+            "read": true,
+            "email": "tom@example.com"
+          },
+          {
+            "id": "lead_3",
+            "name": "Jessica Lee",
+            "date": "2024-04-08",
+            "read": false,
+            "email": "jessica@example.com"
+          },
+          {
+            "id": "lead_4",
+            "name": "David Miller",
+            "date": "2024-04-07",
+            "read": true,
+            "email": "david@example.com"
+          }
         ],
         "latestNotices": [
-          { "id": "notice_1", "title": "Exam Schedule Released", "type": "Exam", "date": "2024-04-10", "priority": "High" },
-          { "id": "notice_2", "title": "Holiday Announcement", "type": "Announcement", "date": "2024-04-09", "priority": "Medium" },
-          { "id": "notice_3", "title": "Admission Results Out", "type": "General", "date": "2024-04-08", "priority": "High" }
+          {
+            "id": "notice_1",
+            "title": "Exam Schedule Released",
+            "type": "Exam",
+            "date": "2024-04-10",
+            "priority": "High"
+          },
+          {
+            "id": "notice_2",
+            "title": "Holiday Announcement",
+            "type": "Announcement",
+            "date": "2024-04-09",
+            "priority": "Medium"
+          },
+          {
+            "id": "notice_3",
+            "title": "Admission Results Out",
+            "type": "General",
+            "date": "2024-04-08",
+            "priority": "High"
+          }
         ]
       }
     }
@@ -310,23 +391,25 @@ DashboardResponse {
 **Implementation Steps:**
 
 1. **Add to lib/api.ts:**
+
 ```typescript
 export async function getDashboardData() {
   const response = await fetch(`${API_BASE_URL}/dashboard`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Authorization': `Bearer ${getToken()}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+      "Content-Type": "application/json",
     },
   });
 
-  if (!response.ok) throw new Error('Failed to fetch dashboard data');
+  if (!response.ok) throw new Error("Failed to fetch dashboard data");
   const data = await response.json();
   return data.data;
 }
 ```
 
 2. **Update dashboard-client.tsx:**
+
 ```typescript
 'use client';
 import { useEffect, useState } from 'react';
@@ -359,6 +442,7 @@ export default function DashboardClient() {
 ```
 
 **Features Currently Displayed:**
+
 - 4 Metric cards (Total Admissions, Pending, Leads, Unread)
 - Line chart (Activity Trends)
 - Donut/Pie chart (Admission Status breakdown)
@@ -371,6 +455,7 @@ export default function DashboardClient() {
 ---
 
 ## ✅ INTEGRATED PAGES (12 modules)
+
 - Sliders - `/cm/sliders`
 - Courses - `/cm/courses`
 - Facilities - `/cm/facilities`
@@ -390,11 +475,13 @@ export default function DashboardClient() {
 ## 🟡 NON-INTEGRATED PAGES (8 modules)
 
 ### 1. **Admissions/Page**
+
 **Location:** `app/admissions/page.tsx`
 
 **Purpose:** Manage admissions forms, applications, and admission requirements
 
 **Required API Endpoints:**
+
 - `GET /ad/admissions` - Fetch all admissions
 - `GET /ad/admissions/:id` - Fetch single admission
 - `POST /ad/admissions` - Create admission
@@ -406,6 +493,7 @@ export default function DashboardClient() {
 - `DELETE /ad/admission-requirements/:id` - Delete requirement
 
 **Expected Data Structure:**
+
 ```typescript
 Admission {
   id: string
@@ -435,6 +523,7 @@ AdmissionRequirement {
 ```
 
 **Features Needed:**
+
 - Application list with search & filter by status
 - Add/Edit/Delete applications
 - Document upload support
@@ -444,17 +533,20 @@ AdmissionRequirement {
 ---
 
 ### 2. **AI Assistant/Page**
+
 **Location:** `app/admissions/ai-assistant/page.tsx`
 
 **Purpose:** AI-powered chatbot for student inquiries and college information
 
 **Required API Endpoints:**
+
 - `POST /ai/chat` - Send message and get AI response
 - `GET /ai/chat-history/:userId` - Fetch conversation history
 - `POST /ai/chat-history` - Save chat session
 - `DELETE /ai/chat/:sessionId` - Delete chat session
 
 **Expected Data Structure:**
+
 ```typescript
 ChatMessage {
   id: string
@@ -476,6 +568,7 @@ ChatSession {
 ```
 
 **Features Needed:**
+
 - Real-time chat interface
 - Message history
 - Session management
@@ -484,11 +577,13 @@ ChatSession {
 ---
 
 ### 3. **Gallery/Page**
+
 **Location:** `app/content/gallery/page.tsx`
 
 **Purpose:** Manage photo/video gallery with albums and categories
 
 **Required API Endpoints:**
+
 - `GET /cm/gallery` - Fetch all gallery items
 - `GET /cm/gallery/albums` - Fetch album categories
 - `POST /cm/gallery` - Create gallery item
@@ -499,6 +594,7 @@ ChatSession {
 - `DELETE /cm/gallery/albums/:id` - Delete album
 
 **Expected Data Structure:**
+
 ```typescript
 GalleryItem {
   id: string
@@ -527,6 +623,7 @@ GalleryAlbum {
 ```
 
 **Features Needed:**
+
 - Image/video upload
 - Album organization
 - Grid/carousel display
@@ -537,11 +634,13 @@ GalleryAlbum {
 ---
 
 ### 4. **Homepage/Page**
+
 **Location:** `app/content/homepage/page.tsx`
 
 **Purpose:** Manage homepage sections and hero content
 
 **Required API Endpoints:**
+
 - `GET /cm/homepage` - Fetch homepage configuration
 - `PUT /cm/homepage` - Update homepage sections
 - `POST /cm/homepage/sections` - Add section
@@ -549,6 +648,7 @@ GalleryAlbum {
 - `DELETE /cm/homepage/sections/:id` - Delete section
 
 **Expected Data Structure:**
+
 ```typescript
 Homepage {
   id: string
@@ -584,6 +684,7 @@ Button {
 ```
 
 **Features Needed:**
+
 - Hero section editor
 - Drag-and-drop section reordering
 - Section templates
@@ -594,17 +695,20 @@ Button {
 ---
 
 ### 5. **Quick Links/Page**
+
 **Location:** `app/content/quick-links/page.tsx`
 
 **Purpose:** Manage quick access links for students and staff
 
 **Required API Endpoints:**
+
 - `GET /cm/quick-links` - Fetch all quick links
 - `POST /cm/quick-links` - Create quick link
 - `PUT /cm/quick-links/:id` - Update quick link
 - `DELETE /cm/quick-links/:id` - Delete quick link
 
 **Expected Data Structure:**
+
 ```typescript
 QuickLink {
   id: string
@@ -622,6 +726,7 @@ QuickLink {
 ```
 
 **Features Needed:**
+
 - CRUD operations
 - Icon selection
 - Category grouping
@@ -632,17 +737,20 @@ QuickLink {
 ---
 
 ### 6. **Testimonials/Page**
+
 **Location:** `app/content/testimonials/page.tsx`
 
 **Purpose:** Manage student and alumni testimonials
 
 **Required API Endpoints:**
+
 - `GET /cm/testimonials` - Fetch all testimonials
 - `POST /cm/testimonials` - Create testimonial
 - `PUT /cm/testimonials/:id` - Update testimonial
 - `DELETE /cm/testimonials/:id` - Delete testimonial
 
 **Expected Data Structure:**
+
 ```typescript
 Testimonial {
   id: string
@@ -662,6 +770,7 @@ Testimonial {
 ```
 
 **Features Needed:**
+
 - Add/Edit/Delete testimonials
 - Image upload
 - Star rating system
@@ -672,11 +781,13 @@ Testimonial {
 ---
 
 ### 7. **Student Corner/Page**
+
 **Location:** `app/student-corner/page.tsx`
 
 **Purpose:** Manage student resources, announcements, and academic materials
 
 **Required API Endpoints:**
+
 - `GET /st/student-resources` - Fetch resources
 - `POST /st/student-resources` - Create resource
 - `PUT /st/student-resources/:id` - Update resource
@@ -687,6 +798,7 @@ Testimonial {
 - `DELETE /st/announcements/:id` - Delete announcement
 
 **Expected Data Structure:**
+
 ```typescript
 StudentResource {
   id: string
@@ -718,6 +830,7 @@ Announcement {
 ```
 
 **Features Needed:**
+
 - Resource library with file uploads
 - Category organization
 - Course-wise filtering
@@ -728,11 +841,13 @@ Announcement {
 ---
 
 ### 8. **Login/Page**
+
 **Location:** `app/login/page.tsx`
 
 **Purpose:** User authentication and login management
 
 **Required API Endpoints:**
+
 - `POST /auth/login` - User login
 - `POST /auth/logout` - User logout
 - `POST /auth/register` - Admin registration
@@ -742,6 +857,7 @@ Announcement {
 - `GET /auth/me` - Get current user profile
 
 **Expected Data Structure:**
+
 ```typescript
 LoginRequest {
   email: string
@@ -778,6 +894,7 @@ PasswordReset {
 ```
 
 **Features Needed:**
+
 - Email/password login
 - JWT token management
 - Session management
@@ -790,34 +907,29 @@ PasswordReset {
 
 ## Summary Table
 
-| Page | Status | Module | Endpoints Count |
-|------|--------|--------|-----------------|
-| Dashboard | ❌ Not Integrated | Dashboard | 6 |
-| Admissions | ❌ Not Integrated | Admissions | 8 |
-| AI Assistant | ❌ Not Integrated | AI Chat | 4 |
-| Gallery | ❌ Not Integrated | Content | 8 |
-| Homepage | ❌ Not Integrated | Content | 5 |
-| Quick Links | ❌ Not Integrated | Content | 4 |
-| Testimonials | ❌ Not Integrated | Content | 4 |
-| Student Corner | ❌ Not Integrated | Student | 8 |
-| Login | ❌ Not Integrated | Auth | 7 |
-| **TOTAL** | | | **54 Endpoints** |
+| Page           | Status            | Module     | Endpoints Count  |
+| -------------- | ----------------- | ---------- | ---------------- |
+| Dashboard      | ❌ Not Integrated | Dashboard  | 6                |
+| Admissions     | ❌ Not Integrated | Admissions | 8                |
+| AI Assistant   | ❌ Not Integrated | AI Chat    | 4                |
+| Gallery        | ❌ Not Integrated | Content    | 8                |
+| Homepage       | ❌ Not Integrated | Content    | 5                |
+| Quick Links    | ❌ Not Integrated | Content    | 4                |
+| Testimonials   | ❌ Not Integrated | Content    | 4                |
+| Student Corner | ❌ Not Integrated | Student    | 8                |
+| Login          | ❌ Not Integrated | Auth       | 7                |
+| **TOTAL**      |                   |            | **54 Endpoints** |
 
 ---
 
 ## Implementation Priority
 
 **Phase 1 (Critical):**
+
 1. Dashboard (main landing page - shows all metrics)
 2. Login/Auth (security requirement)
 3. Admissions (business critical)
 
-**Phase 2 (Important):**
-4. Gallery
-5. Testimonials
-6. Homepage
+**Phase 2 (Important):** 4. Gallery 5. Testimonials 6. Homepage
 
-**Phase 3 (Nice to Have):**
-7. Quick Links
-8. Student Corner
-9. AI Assistant (advanced feature)
+**Phase 3 (Nice to Have):** 7. Quick Links 8. Student Corner 9. AI Assistant (advanced feature)
