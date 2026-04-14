@@ -320,6 +320,7 @@ function EventForm({
 }: EventFormProps) {
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
+    slug: initialData?.slug || '',
     category: initialData?.category || '',
     excerpt: initialData?.excerpt || '',
     description: initialData?.description || '',
@@ -368,6 +369,18 @@ function EventForm({
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           required
+          disabled={isLoading}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">Slug</label>
+        <input
+          type="text"
+          value={formData.slug}
+          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          placeholder="auto-generated from title if left blank"
           disabled={isLoading}
         />
       </div>
