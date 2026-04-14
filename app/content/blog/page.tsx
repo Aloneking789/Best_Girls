@@ -343,8 +343,9 @@ export default function BlogPage() {
         isOpen={isPostModalOpen}
         onClose={() => setIsPostModalOpen(false)}
         title={editingId ? 'Edit Post' : 'Add Blog Post'}
+        size="full"
       >
-        <form className="space-y-4 max-h-[70vh] overflow-y-auto">
+        <form className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">Title *</label>
             <input
@@ -352,6 +353,17 @@ export default function BlogPage() {
               placeholder="Enter post title"
               value={formData.title || ''}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">Slug</label>
+            <input
+              type="text"
+              placeholder="auto-generated from title if left blank"
+              value={formData.slug || ''}
+              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
