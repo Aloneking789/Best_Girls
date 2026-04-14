@@ -284,6 +284,7 @@ export default function EventsPage() {
         isOpen={isAddModalOpen}
         onClose={() => !actionLoading && setIsAddModalOpen(false)}
         title="Add New Event"
+        size="full"
       >
         <EventForm onSubmit={handleSubmitEvent} onCancel={() => setIsAddModalOpen(false)} isLoading={actionLoading} />
       </Modal>
@@ -293,6 +294,7 @@ export default function EventsPage() {
         isOpen={isEditModalOpen}
         onClose={() => !actionLoading && setIsEditModalOpen(false)}
         title="Edit Event"
+        size="full"
       >
         <EventForm
           initialData={selectedEvent || undefined}
@@ -388,14 +390,22 @@ function EventForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-2">Category</label>
-          <input
-            type="text"
+          <select
             value={formData.category}
             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-2 border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary"
             required
             disabled={isLoading}
-          />
+          >
+            <option value="" disabled>
+              Select category
+            </option>
+            <option value="Webinars/Workshops/FDP/Conferences">Webinars/Workshops/FDP/Conferences</option>
+            <option value="Cultural Events">Cultural Events</option>
+            <option value="Upcoming Events">Upcoming Events</option>
+            <option value="Academic Events">Academic Events</option>
+            <option value="Tours/ Industrial Visits">Tours/ Industrial Visits</option>
+          </select>
         </div>
 
         <div>
