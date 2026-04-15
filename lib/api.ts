@@ -318,6 +318,7 @@ export interface Course {
   duration: string;
   fee: string;
   eligibility: string;
+  image?: string;
   attachments: string;
   isActive: boolean;
   categoryId: string;
@@ -352,6 +353,7 @@ export interface CourseUpdatePayload {
   attachments?: string;
   categoryId?: string;
   isActive?: boolean;
+  image?: File;
 }
 
 // Get all course categories
@@ -479,6 +481,35 @@ export const deleteCourse = async (id: string): Promise<void> => {
     }
   } catch (error) {
     console.error('Error deleting course:', error);
+    throw error;
+  }
+};
+
+// Upload course image
+export const uploadCourseImage = async (id: string, image: File): Promise<Course> => {
+  try {
+    const formData = new FormData();
+    formData.append('image', image);
+
+    const token = getToken();
+    const headers: any = {
+      'Authorization': token ? `Bearer ${token}` : '',
+    };
+
+    const response = await fetch(`${API_BASE_URL}/cr/courses/${id}`, {
+      method: 'PUT',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload course image');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error uploading course image:', error);
     throw error;
   }
 };

@@ -13,6 +13,7 @@ import {
   deleteCourse,
   toggleCourse,
   createCourseCategory,
+  uploadCourseImage,
   type Course,
   type CourseCategory,
 } from '@/lib/api';
@@ -120,6 +121,8 @@ export default function CoursesPage() {
     try {
       setActionLoading(true);
       setError(null);
+      
+      // Step 1: Create the course (POST)
       const newCourse = await createCourse({
         title: formData.title,
         description: formData.description,
@@ -129,7 +132,20 @@ export default function CoursesPage() {
         categoryId: formData.categoryId,
         isActive: true,
       });
-      setCourses([...courses, newCourse]);
+
+      // Step 2: Upload image simultaneously if provided (PUT)
+      let courseWithImage = newCourse;
+      if (formData.image) {
+        try {
+          courseWithImage = await uploadCourseImage(newCourse.id, formData.image);
+        } catch (imageError) {
+          console.error('Image upload failed, but course was created:', imageError);
+          // Course was created successfully, but image upload failed
+          setError('Course created, but image upload failed. You can retry uploading the image.');
+        }
+      }
+
+      setCourses([...courses, courseWithImage]);
       setIsAddModalOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create course');
@@ -144,6 +160,8 @@ export default function CoursesPage() {
       try {
         setActionLoading(true);
         setError(null);
+
+        // Step 1: Update course details (PUT with JSON)
         const updated = await updateCourse(selectedCourse.id, {
           title: formData.title,
           description: formData.description,
@@ -152,7 +170,20 @@ export default function CoursesPage() {
           eligibility: formData.eligibility,
           categoryId: formData.categoryId,
         });
-        setCourses(courses.map(c => c.id === selectedCourse.id ? updated : c));
+
+        // Step 2: Upload image simultaneously if provided (PUT with multipart)
+        let courseWithImage = updated;
+        if (formData.image) {
+          try {
+            courseWithImage = await uploadCourseImage(selectedCourse.id, formData.image);
+          } catch (imageError) {
+            console.error('Image upload failed, but course was updated:', imageError);
+            // Course was updated successfully, but image upload failed
+            setError('Course updated, but image upload failed. You can retry uploading the image.');
+          }
+        }
+
+        setCourses(courses.map(c => c.id === selectedCourse.id ? courseWithImage : c));
         setIsEditModalOpen(false);
         setSelectedCourse(null);
       } catch (err) {
@@ -289,6 +320,7 @@ export default function CoursesPage() {
                     <table className="w-full text-sm">
                       <thead className="bg-muted border-b border-border">
                         <tr>
+                          <th className="text-left py-4 px-6 font-semibold text-foreground">Image</th>
                           <th className="text-left py-4 px-6 font-semibold text-foreground">Course Name</th>
                           <th className="text-left py-4 px-6 font-semibold text-foreground">Category</th>
                           <th className="text-left py-4 px-6 font-semibold text-foreground">Duration</th>
@@ -300,6 +332,17 @@ export default function CoursesPage() {
                       <tbody>
                         {paginatedCourses.map((course) => (
                           <tr key={course.id} className="border-b border-border hover:bg-muted transition-colors">
+                            <td className="py-4 px-6">
+                              {course.image ? (
+                                <div className="w-12 h-12 rounded-lg overflow-hidden border border-border">
+                                  <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-muted border border-border flex items-center justify-center text-xs text-muted-foreground">
+                                  No image
+                                </div>
+                              )}
+                            </td>
                             <td className="py-4 px-6 font-medium text-foreground">{course.title}</td>
                             <td className="py-4 px-6 text-muted-foreground">{course.category.name}</td>
                             <td className="py-4 px-6 text-muted-foreground">{course.duration}</td>
@@ -437,7 +480,22 @@ function CourseForm({
     fee: initialData?.fee || '',
     eligibility: initialData?.eligibility || '',
     categoryId: initialData?.categoryId || '',
+    image: null as File | null,
   });
+
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData({ ...formData, image: file });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -446,6 +504,25 @@ function CourseForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">Course Image</label>
+        <div className="space-y-2">
+          {imagePreview && (
+            <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            disabled={isLoading}
+            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 cursor-pointer"
+          />
+          <p className="text-xs text-muted-foreground">Upload course image (JPEG, PNG, etc.)</p>
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">Course Title *</label>
         <input
