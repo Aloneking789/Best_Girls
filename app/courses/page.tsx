@@ -161,27 +161,28 @@ export default function CoursesPage() {
         setActionLoading(true);
         setError(null);
 
-        // Step 1: Update course details (PUT with JSON)
-        const updated = await updateCourse(selectedCourse.id, {
+        // Image is REQUIRED - user must provide a new image or we use existing
+        if (!formData.image) {
+          setError('Please select an image to update the course');
+          setActionLoading(false);
+          return;
+        }
+
+        // Generate slug from title if not provided
+        const slug = formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-');
+
+        // Update uses formData (multipart) - image is REQUIRED
+        // NOTE: Do NOT pass categoryId for updates - backend doesn't accept it
+        const courseWithImage = await updateCourse(selectedCourse.id, {
           title: formData.title,
+          slug: slug,
           description: formData.description,
           duration: formData.duration,
           fee: formData.fee,
           eligibility: formData.eligibility,
-          categoryId: formData.categoryId,
+          isActive: true,
+          image: formData.image, // REQUIRED - must always be provided
         });
-
-        // Step 2: Upload image simultaneously if provided (PUT with multipart)
-        let courseWithImage = updated;
-        if (formData.image) {
-          try {
-            courseWithImage = await uploadCourseImage(selectedCourse.id, formData.image);
-          } catch (imageError) {
-            console.error('Image upload failed, but course was updated:', imageError);
-            // Course was updated successfully, but image upload failed
-            setError('Course updated, but image upload failed. You can retry uploading the image.');
-          }
-        }
 
         setCourses(courses.map(c => c.id === selectedCourse.id ? courseWithImage : c));
         setIsEditModalOpen(false);

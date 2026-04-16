@@ -444,27 +444,60 @@ export const createCourse = async (payload: CourseCreatePayload): Promise<Course
   }
 };
 
-// Update course
+// Update course - ALWAYS uses multipart/form-data (image is REQUIRED)
 export const updateCourse = async (
   id: string,
   payload: CourseUpdatePayload
 ): Promise<Course> => {
   try {
+    // Convert JSON payload to FormData
+    const formData = new FormData();
+    
+    // Add all fields to form data (excluding categoryId - don't pass it on update)
+    if (payload.title) formData.append('title', payload.title);
+    if (payload.slug) formData.append('slug', payload.slug);
+    if (payload.description) formData.append('description', payload.description);
+    if (payload.duration) formData.append('duration', payload.duration);
+    if (payload.fee) formData.append('fee', payload.fee);
+    if (payload.eligibility) formData.append('eligibility', payload.eligibility);
+    // NOTE: categoryId is NOT included in FormData for updates - backend doesn't accept it
+    if (payload.isActive !== undefined) formData.append('isActive', String(payload.isActive));
+    // NOTE: image is REQUIRED for updates - backend always expects it
+    if (payload.image) formData.append('image', payload.image);
+    else {
+      throw new Error('Image is required for course updates. Please provide an image file.');
+    }
+
+    console.log('Updating course with FormData:', { id, hasImage: !!payload.image, fields: Object.keys(payload) });
+    
+    const token = getToken();
+    const headers: HeadersInit = {};
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    // DO NOT set Content-Type - let browser handle it with boundary
+
     const response = await fetch(`${API_BASE_URL}/cr/courses/${id}`, {
       method: 'PUT',
-      headers: getHeaders(true),
-      body: JSON.stringify(payload),
+      headers,
+      body: formData,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update course');
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.message || `Server error: ${response.status} ${response.statusText}`;
+      console.error('Server response:', { status: response.status, error: errorData });
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
+    console.log('Course updated successfully:', data.data);
     return data.data;
   } catch (error) {
-    console.error('Error updating course:', error);
-    throw error;
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Error updating course:', message);
+    throw new Error(`Failed to update course: ${message}`);
   }
 };
 
@@ -485,29 +518,10 @@ export const deleteCourse = async (id: string): Promise<void> => {
   }
 };
 
-// Upload course image
+// Upload course image (now uses multipart form-data via updateCourse)
 export const uploadCourseImage = async (id: string, image: File): Promise<Course> => {
   try {
-    const formData = new FormData();
-    formData.append('image', image);
-
-    const token = getToken();
-    const headers: any = {
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
-
-    const response = await fetch(`${API_BASE_URL}/cr/courses/${id}`, {
-      method: 'PUT',
-      headers,
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload course image');
-    }
-
-    const data = await response.json();
-    return data.data;
+    return await updateCourse(id, { image });
   } catch (error) {
     console.error('Error uploading course image:', error);
     throw error;
