@@ -297,6 +297,192 @@ export const toggleSlider = async (id: string): Promise<Slider> => {
   }
 };
 
+// ==================== TESTIMONIALS ENDPOINTS ====================
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  designation: string;
+  type: 'TEXT' | 'VIDEO';
+  content: string;
+  videoUrl: string | null;
+  imageUrl: string;
+  order: number;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestimonialCreatePayload {
+  name: string;
+  designation: string;
+  type: 'TEXT' | 'VIDEO';
+  content?: string;
+  videoUrl?: string;
+  image?: File;
+  order: number;
+  isPublished?: boolean;
+}
+
+export interface TestimonialUpdatePayload {
+  name?: string;
+  designation?: string;
+  type?: 'TEXT' | 'VIDEO';
+  content?: string;
+  videoUrl?: string;
+  image?: File;
+  order?: number;
+  isPublished?: boolean;
+}
+
+export const getTestimonials = async (): Promise<Testimonial[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/testimonials/admin/`, {
+      method: 'GET',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch testimonials');
+    }
+
+    const data = await response.json();
+    return data.data || [];
+  } catch (error) {
+    console.error('Error fetching testimonials:', error);
+    throw error;
+  }
+};
+
+export const createTestimonial = async (
+  payload: TestimonialCreatePayload
+): Promise<Testimonial> => {
+  try {
+    const formData = new FormData();
+    formData.append('name', payload.name);
+    formData.append('designation', payload.designation);
+    formData.append('type', payload.type);
+    formData.append('order', payload.order.toString());
+    formData.append('isPublished', String(payload.isPublished ?? false));
+
+    if (payload.content) {
+      formData.append('content', payload.content);
+    }
+
+    if (payload.videoUrl) {
+      formData.append('videoUrl', payload.videoUrl);
+    }
+
+    if (payload.image) {
+      formData.append('image', payload.image);
+    }
+
+    const token = getToken();
+    const headers: HeadersInit = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/testimonials/`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create testimonial');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error creating testimonial:', error);
+    throw error;
+  }
+};
+
+export const updateTestimonial = async (
+  id: string,
+  payload: TestimonialUpdatePayload
+): Promise<Testimonial> => {
+  try {
+    let body: BodyInit;
+    let headers: HeadersInit = {};
+
+    if (payload.image) {
+      const formData = new FormData();
+      if (payload.name) formData.append('name', payload.name);
+      if (payload.designation) formData.append('designation', payload.designation);
+      if (payload.type) formData.append('type', payload.type);
+      if (payload.content) formData.append('content', payload.content);
+      if (payload.videoUrl) formData.append('videoUrl', payload.videoUrl);
+      if (payload.order !== undefined) formData.append('order', payload.order.toString());
+      if (payload.isPublished !== undefined) formData.append('isPublished', String(payload.isPublished));
+      formData.append('image', payload.image);
+      body = formData;
+
+      const token = getToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    } else {
+      body = JSON.stringify(payload);
+      headers = getHeaders(true);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/testimonials/${id}`, {
+      method: 'PUT',
+      headers,
+      body,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update testimonial');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error updating testimonial:', error);
+    throw error;
+  }
+};
+
+export const deleteTestimonial = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/testimonials/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete testimonial');
+    }
+  } catch (error) {
+    console.error('Error deleting testimonial:', error);
+    throw error;
+  }
+};
+
+export const toggleTestimonial = async (id: string): Promise<Testimonial> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/testimonials/${id}/toggle`, {
+      method: 'PATCH',
+      headers: getHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to toggle testimonial publication');
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error('Error toggling testimonial:', error);
+    throw error;
+  }
+};
+
 // ==================== COURSE ENDPOINTS ====================
 
 export interface CourseCategory {
@@ -553,7 +739,7 @@ export const toggleCourse = async (id: string): Promise<Course> => {
 export interface Facility {
   id: string;
   title: string;
-  image: string;
+  imageUrl: string;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;
@@ -1436,8 +1622,8 @@ export const updateAchievement = async (id: string, payload: AchievementUpdatePa
     if (payload.title) formData.append('title', payload.title);
     if (payload.description) formData.append('description', payload.description);
     if (payload.category) formData.append('category', payload.category);
-    if (payload.year) formData.append('year', payload.year.toString());
-    formData.append('imageUrl', payload.imageUrl || 'NA');
+    if (payload.year !== undefined) formData.append('year', payload.year.toString());
+    if (payload.imageUrl !== undefined) formData.append('imageUrl', payload.imageUrl);
     if (payload.isActive !== undefined) formData.append('isActive', payload.isActive ? 'true' : 'false');
     if (payload.image) formData.append('image', payload.image);
 

@@ -165,11 +165,22 @@ function AchievementForm({ initialData, isEdit, onSubmit, onCancel, isLoading = 
     description: initialData?.description || '',
     category: initialData?.category || '',
     year: initialData?.year?.toString() || new Date().getFullYear().toString(),
-    imageUrl: initialData?.imageUrl || 'NA',
     isActive: initialData?.isActive ?? true,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>(initialData?.imageUrl || '');
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.imageUrl || null);
+
+  useEffect(() => {
+    setFormData({
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      category: initialData?.category || '',
+      year: initialData?.year?.toString() || new Date().getFullYear().toString(),
+      isActive: initialData?.isActive ?? true,
+    });
+    setImageFile(null);
+    setImagePreview(initialData?.imageUrl || null);
+  }, [initialData]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,12 +201,38 @@ function AchievementForm({ initialData, isEdit, onSubmit, onCancel, isLoading = 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const submitData = {
-      ...formData,
-      year: parseInt(formData.year),
-      ...(imageFile && { image: imageFile }),
+
+    if (isEdit) {
+      if (!initialData) return;
+
+      const payload: AchievementUpdatePayload = {};
+      if (formData.title !== initialData.title) payload.title = formData.title;
+      if (formData.description !== initialData.description) payload.description = formData.description;
+      if (formData.category !== initialData.category) payload.category = formData.category;
+      const yearValue = parseInt(formData.year, 10);
+      if (yearValue !== initialData.year) payload.year = yearValue;
+      if (formData.isActive !== initialData.isActive) payload.isActive = formData.isActive;
+      if (imageFile) payload.image = imageFile;
+
+      if (Object.keys(payload).length === 0) {
+        alert('No changes were made to save.');
+        return;
+      }
+
+      await onSubmit(payload);
+      return;
+    }
+
+    const payload: AchievementCreatePayload = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      year: parseInt(formData.year, 10),
+      isActive: formData.isActive,
     };
-    await onSubmit(submitData);
+    if (imageFile) payload.image = imageFile;
+
+    await onSubmit(payload);
   };
 
   return (

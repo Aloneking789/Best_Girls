@@ -11,8 +11,15 @@ export default function SliderPage() {
   const [slides, setSlides] = useState<Slider[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<{
+    title?: string;
+    caption?: string;
+    linkUrl?: string;
+    order?: number;
+    imageUrl?: string;
+  }>({});
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('order');
   const [loading, setLoading] = useState(true);
@@ -53,7 +60,9 @@ export default function SliderPage() {
         caption: slide.caption,
         linkUrl: slide.linkUrl,
         order: slide.order,
+        imageUrl: slide.imageUrl,
       });
+      setImagePreview(slide.imageUrl);
     } else {
       setEditingId(null);
       setFormData({
@@ -61,7 +70,9 @@ export default function SliderPage() {
         caption: '',
         linkUrl: '',
         order: 0,
+        imageUrl: undefined,
       });
+      setImagePreview(null);
     }
     setSelectedImage(null);
     setIsModalOpen(true);
@@ -78,17 +89,27 @@ export default function SliderPage() {
       }
 
       if (editingId) {
-        // Update existing slider
-        const updated = await updateSlider(editingId, {
-          title: formData.title,
-          caption: formData.caption,
-          linkUrl: formData.linkUrl,
-          order: formData.order || 0,
-          image: selectedImage || undefined,
-        });
-        setSlides(slides.map(s => s.id === editingId ? updated : s));
+        const originalSlide = slides.find((slide) => slide.id === editingId);
+        if (!originalSlide) {
+          setError('Unable to find slide to update');
+          return;
+        }
+
+        const payload: any = {};
+        if (formData.title !== originalSlide.title) payload.title = formData.title;
+        if (formData.caption !== originalSlide.caption) payload.caption = formData.caption;
+        if (formData.linkUrl !== originalSlide.linkUrl) payload.linkUrl = formData.linkUrl;
+        if ((formData.order ?? 0) !== originalSlide.order) payload.order = formData.order;
+        if (selectedImage) payload.image = selectedImage;
+
+        if (Object.keys(payload).length === 0) {
+          setError('No changes were made to save.');
+          return;
+        }
+
+        const updated = await updateSlider(editingId, payload);
+        setSlides(slides.map((s) => (s.id === editingId ? updated : s)));
       } else {
-        // Create new slider
         if (!selectedImage) {
           setError('Please select an image');
           return;
@@ -106,6 +127,7 @@ export default function SliderPage() {
       setIsModalOpen(false);
       setFormData({});
       setSelectedImage(null);
+      setImagePreview(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save slider');
       console.error(err);
@@ -317,12 +339,23 @@ export default function SliderPage() {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setSelectedImage(file);
+                setImagePreview(file ? URL.createObjectURL(file) : formData.imageUrl || null);
+              }}
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <p className="text-xs text-muted-foreground mt-2">
               {selectedImage ? `Selected: ${selectedImage.name}` : editingId ? 'Leave empty to keep current image' : 'Required for new sliders'}
             </p>
+            {imagePreview ? (
+              <img
+                src={imagePreview}
+                alt="Selected slide preview"
+                className="mt-3 h-32 w-full rounded-lg object-cover"
+              />
+            ) : null}
           </div>
           <div className="flex gap-3 pt-4">
             <button

@@ -36,7 +36,7 @@ const navItems: NavItem[] = [
       { label: 'Campus Facilities', href: '/content/facilities' },
       // { label: 'Quick Links', href: '/content/quick-links' },
       { label: 'Blog & News', href: '/content/blog' },
-      // { label: 'Testimonials', href: '/content/testimonials' },
+      { label: 'Testimonials', href: '/content/testimonials' },
       { label: 'Departments', href: '/content/departments' },
       { label: 'Gallery', href: '/content/gallery' },
       { label: 'Achievements', href: '/content/achievements' },

@@ -14,6 +14,7 @@ export default function FacilitiesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<Facility>>({});
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -58,10 +59,14 @@ export default function FacilitiesPage() {
   const handleOpenModal = (facility?: Facility) => {
     if (facility) {
       setEditingId(facility.id);
-      setFormData(facility);
+      setFormData({
+        ...facility,
+      });
+      setImagePreview(facility.imageUrl || null);
     } else {
       setEditingId(null);
       setFormData({ sortOrder: facilities.length + 1 });
+      setImagePreview(null);
     }
     setSelectedImage(null);
     setIsModalOpen(true);
@@ -80,19 +85,33 @@ export default function FacilitiesPage() {
 
       // Use the Facility interface API functions
       if (editingId) {
-        const payload: FacilityUpdatePayload = {
-          title: formData.title,
-          sortOrder: formData.sortOrder || 0,
-        };
+        const originalFacility = facilities.find((facility) => facility.id === editingId);
+        if (!originalFacility) {
+          setError('Unable to find facility to update');
+          return;
+        }
+
+        const payload: FacilityUpdatePayload = {};
+        if (formData.title?.trim() !== originalFacility.title) {
+          payload.title = formData.title?.trim();
+        }
+        if ((formData.sortOrder ?? originalFacility.sortOrder) !== originalFacility.sortOrder) {
+          payload.sortOrder = formData.sortOrder;
+        }
         if (selectedImage) {
           payload.image = selectedImage;
+        }
+
+        if (Object.keys(payload).length === 0) {
+          setError('No changes were made to save.');
+          return;
         }
 
         const updated = await updateFacility(editingId, payload);
         setFacilities(facilities.map(f => f.id === editingId ? updated : f));
       } else {
         const payload: FacilityCreatePayload = {
-          title: formData.title,
+          title: formData.title?.trim() || '',
           sortOrder: formData.sortOrder || 1,
         };
         if (selectedImage) {
@@ -220,8 +239,8 @@ export default function FacilitiesPage() {
                             <tr key={facility.id} className="border-b border-border hover:bg-muted/30">
                               <td className="py-4 px-4 font-medium">{facility.title}</td>
                               <td className="py-4 px-4 text-center">
-                                {facility.image && (
-                                  <img src={facility.image} alt={facility.title} className="h-10 w-10 rounded object-cover mx-auto" />
+                                {facility.imageUrl && (
+                                  <img src={facility.imageUrl} alt={facility.title} className="h-10 w-10 rounded object-cover mx-auto" />
                                 )}
                               </td>
                               <td className="py-4 px-4 text-center text-sm">{facility.sortOrder}</td>
@@ -333,34 +352,32 @@ export default function FacilitiesPage() {
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">Image</label>
             <div className="space-y-2">
-              {(selectedImage || (editingId && formData.image)) && (
+              {imagePreview && (
                 <div className="relative">
                   <img
-                    src={selectedImage ? URL.createObjectURL(selectedImage) : (formData.image as string)}
-                    alt="Preview"
+                    src={imagePreview}
+                    alt="Current facility image"
                     className="w-full h-40 rounded-lg object-cover"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setSelectedImage(null)}
-                    className="absolute top-2 right-2 bg-destructive text-destructive-foreground px-2 py-1 rounded text-sm"
-                  >
-                    Remove
-                  </button>
                 </div>
               )}
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setSelectedImage(file);
+                  const file = e.target.files?.[0] || null;
+                  setSelectedImage(file);
+                  setImagePreview(file ? URL.createObjectURL(file) : imagePreview);
                 }}
                 className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
+              {editingId && !selectedImage && imagePreview && (
+                <p className="text-xs text-muted-foreground">
+                  Current image shown above. Leave file empty to keep the same image.
+                </p>
+              )}
             </div>
           </div>
-
           <div className="flex gap-3 pt-4">
             <button
               type="button"
