@@ -121,7 +121,7 @@ export default function CoursesPage() {
     try {
       setActionLoading(true);
       setError(null);
-      
+
       // Step 1: Create the course (POST)
       const newCourse = await createCourse({
         title: formData.title,
