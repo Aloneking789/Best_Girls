@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Trash2, Edit2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getToken } from '@/lib/api';
 import Header from '@/components/header';
 import Sidebar from '@/components/sidebar';
 
@@ -21,7 +22,6 @@ interface FormState {
 }
 
 const API_BASE_URL = 'https://kgvit.vercel.app/api/v1/tapastries';
-const TOKEN = typeof window !== 'undefined' ? localStorage.getItem('authToken') || '' : '';
 
 export default function TapestryTalesPage() {
   const [tapestries, setTapestries] = useState<Tapestry[]>([]);
@@ -111,10 +111,15 @@ export default function TapestryTalesPage() {
       fd.append('title', formData.title);
       fd.append('image', formData.image);
 
+      const token = getToken();
+      if (!token) {
+        throw new Error('Unauthorized: missing auth token');
+      }
+
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
         body: fd,
       });
@@ -164,10 +169,15 @@ export default function TapestryTalesPage() {
         fd.append('image', formData.image);
       }
 
+      const token = getToken();
+      if (!token) {
+        throw new Error('Unauthorized: missing auth token');
+      }
+
       const response = await fetch(`${API_BASE_URL}/${editingId}`, {
         method: 'PUT',
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
         body: fd,
       });
@@ -203,10 +213,15 @@ export default function TapestryTalesPage() {
     }
 
     try {
+      const token = getToken();
+      if (!token) {
+        throw new Error('Unauthorized: missing auth token');
+      }
+
       const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -252,161 +267,161 @@ export default function TapestryTalesPage() {
             </div>
 
             {/* Loading State */}
-      {loading && (
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && tapestries.length === 0 && (
-        <div className="text-center py-12 bg-muted/50 rounded-lg">
-          <p className="text-muted-foreground mb-4">No tapestries found</p>
-          <button
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            <Plus size={20} />
-            Create First Tapestry
-          </button>
-        </div>
-      )}
-
-      {/* Tapestries Grid */}
-      {!loading && tapestries.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tapestries.map((tapestry) => (
-            <div
-              key={tapestry.id}
-              className="bg-white border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition"
-            >
-              {/* Image */}
-              <div className="relative w-full h-48 bg-muted">
-                <Image
-                  src={tapestry.imageUrl}
-                  alt={tapestry.title}
-                  fill
-                  className="object-cover"
-                />
+            {loading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
+            )}
 
-              {/* Content */}
-              <div className="p-4 space-y-3">
-                <h3 className="font-semibold text-lg line-clamp-2">
-                  {tapestry.title}
-                </h3>
-
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <p>Created: {new Date(tapestry.createdAt).toLocaleDateString()}</p>
-                  <p>Updated: {new Date(tapestry.updatedAt).toLocaleDateString()}</p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t">
-                  <button
-                    onClick={() => openEditModal(tapestry)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 px-3 py-2 rounded hover:bg-blue-100 transition text-sm font-medium"
-                  >
-                    <Edit2 size={16} />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(tapestry.id)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 px-3 py-2 rounded hover:bg-red-100 transition text-sm font-medium"
-                  >
-                    <Trash2 size={16} />
-                    Delete
-                  </button>
-                </div>
+            {/* Empty State */}
+            {!loading && tapestries.length === 0 && (
+              <div className="text-center py-12 bg-muted/50 rounded-lg">
+                <p className="text-muted-foreground mb-4">No tapestries found</p>
+                <button
+                  onClick={openCreateModal}
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                >
+                  <Plus size={20} />
+                  Create First Tapestry
+                </button>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )}
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold">
-              {isEditMode ? 'Edit Tapestry' : 'Create Tapestry'}
-            </h2>
+            {/* Tapestries Grid */}
+            {!loading && tapestries.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tapestries.map((tapestry) => (
+                  <div
+                    key={tapestry.id}
+                    className="bg-white border border-border rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition"
+                  >
+                    {/* Image */}
+                    <div className="relative w-full h-48 bg-muted">
+                      <Image
+                        src={tapestry.imageUrl}
+                        alt={tapestry.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
 
-            {/* Title Input */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Title</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                className="w-full border border-border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter tapestry title"
-              />
-            </div>
+                    {/* Content */}
+                    <div className="p-4 space-y-3">
+                      <h3 className="font-semibold text-lg line-clamp-2">
+                        {tapestry.title}
+                      </h3>
 
-            {/* Image Section */}
-            <div>
-              {isEditMode && editingImagePreview && !imagePreview && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium mb-2">Current Image</p>
-                  <div className="relative w-full h-32 bg-muted rounded overflow-hidden">
-                    <Image
-                      src={editingImagePreview}
-                      alt="Current tapestry"
-                      fill
-                      className="object-cover"
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <p>Created: {new Date(tapestry.createdAt).toLocaleDateString()}</p>
+                        <p>Updated: {new Date(tapestry.updatedAt).toLocaleDateString()}</p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-2 border-t">
+                        <button
+                          onClick={() => openEditModal(tapestry)}
+                          className="flex-1 flex items-center justify-center gap-2 bg-blue-50 text-blue-600 px-3 py-2 rounded hover:bg-blue-100 transition text-sm font-medium"
+                        >
+                          <Edit2 size={16} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(tapestry.id)}
+                          className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 px-3 py-2 rounded hover:bg-red-100 transition text-sm font-medium"
+                        >
+                          <Trash2 size={16} />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Modal */}
+            {isModalOpen && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-lg max-w-md w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                  <h2 className="text-2xl font-bold">
+                    {isEditMode ? 'Edit Tapestry' : 'Create Tapestry'}
+                  </h2>
+
+                  {/* Title Input */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Title</label>
+                    <input
+                      type="text"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                      className="w-full border border-border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter tapestry title"
                     />
                   </div>
-                </div>
-              )}
 
-              <label className="block text-sm font-medium mb-2">
-                {isEditMode ? 'Change Image (Optional)' : 'Image'}
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full border border-border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+                  {/* Image Section */}
+                  <div>
+                    {isEditMode && editingImagePreview && !imagePreview && (
+                      <div className="mb-4">
+                        <p className="text-sm font-medium mb-2">Current Image</p>
+                        <div className="relative w-full h-32 bg-muted rounded overflow-hidden">
+                          <Image
+                            src={editingImagePreview}
+                            alt="Current tapestry"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
 
-              {imagePreview && (
-                <div className="mt-3">
-                  <p className="text-sm font-medium mb-2">Preview</p>
-                  <div className="relative w-full h-32 bg-muted rounded overflow-hidden">
-                    <Image
-                      src={imagePreview}
-                      alt="Preview"
-                      fill
-                      className="object-cover"
+                    <label className="block text-sm font-medium mb-2">
+                      {isEditMode ? 'Change Image (Optional)' : 'Image'}
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full border border-border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+
+                    {imagePreview && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium mb-2">Preview</p>
+                        <div className="relative w-full h-32 bg-muted rounded overflow-hidden">
+                          <Image
+                            src={imagePreview}
+                            alt="Preview"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-3 pt-4 border-t">
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      disabled={isSubmitting}
+                      className="flex-1 px-4 py-2 border border-border rounded hover:bg-muted transition disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={isEditMode ? handleUpdate : handleCreate}
+                      disabled={isSubmitting}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Processing...' : isEditMode ? 'Update' : 'Create'}
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div className="flex gap-3 pt-4 border-t">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                disabled={isSubmitting}
-                className="flex-1 px-4 py-2 border border-border rounded hover:bg-muted transition disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={isEditMode ? handleUpdate : handleCreate}
-                disabled={isSubmitting}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
-              >
-                {isSubmitting ? 'Processing...' : isEditMode ? 'Update' : 'Create'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              </div>
+            )}
           </div>
         </main>
       </div>

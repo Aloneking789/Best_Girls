@@ -4,6 +4,7 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import Image from 'next/image';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getToken } from '@/lib/api';
 import Header from '@/components/header';
 import Sidebar from '@/components/sidebar';
 
@@ -34,10 +35,7 @@ interface AlumniForm {
 
 const API_BASE_URL = 'https://kgvit.vercel.app/api/v1/alumni-profiles';
 
-function getAuthToken() {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem('authToken') ?? '';
-}
+const getAuthToken = () => getToken() ?? '';
 
 export default function AlumniPage() {
   const [profiles, setProfiles] = useState<AlumniProfile[]>([]);
@@ -64,8 +62,11 @@ export default function AlumniPage() {
     try {
       setLoading(true);
       const token = getAuthToken();
+      if (!token) {
+        throw new Error('Unauthorized: missing auth token');
+      }
       const response = await fetch(API_BASE_URL, {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       if (data.success && Array.isArray(data.data)) {
@@ -175,9 +176,13 @@ export default function AlumniPage() {
         body.append('image', formData.image);
       }
 
+      if (!token) {
+        throw new Error('Unauthorized: missing auth token');
+      }
+
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: { Authorization: `Bearer ${token}` },
         body,
       });
       const data = await response.json();
@@ -226,9 +231,13 @@ export default function AlumniPage() {
         body.append('image', formData.image);
       }
 
+      if (!token) {
+        throw new Error('Unauthorized: missing auth token');
+      }
+
       const response = await fetch(`${API_BASE_URL}/${editingId}`, {
         method: 'PUT',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: { Authorization: `Bearer ${token}` },
         body,
       });
       const data = await response.json();
@@ -255,9 +264,13 @@ export default function AlumniPage() {
     if (!confirm('Delete this alumni profile?')) return;
     try {
       const token = getAuthToken();
+      if (!token) {
+        throw new Error('Unauthorized: missing auth token');
+      }
+
       const response = await fetch(`${API_BASE_URL}/${id}`, {
         method: 'DELETE',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {
         throw new Error('Unable to delete profile');
@@ -363,8 +376,8 @@ export default function AlumniPage() {
             )}
 
             {isModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                <div className="w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-xl">
+              <div className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 p-4">
+                <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white p-6 shadow-xl">
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <h2 className="text-2xl font-bold">{isEditMode ? 'Edit Alumni Profile' : 'New Alumni Profile'}</h2>
