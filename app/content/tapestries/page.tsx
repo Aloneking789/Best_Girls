@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Trash2, Edit2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/header';
+import Sidebar from '@/components/sidebar';
 
 interface Tapestry {
   id: string;
@@ -228,23 +230,28 @@ export default function TapestryTalesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Tapestry Tales</h1>
-          <p className="text-muted-foreground mt-1">Manage your tapestry collection</p>
-        </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          Create Tapestry
-        </button>
-      </div>
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-0">
+        <Header breadcrumb={['Content & Website', 'Tapestry Tales']} />
+        <main className="flex-1 overflow-auto p-6">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">Tapestry Tales</h1>
+                <p className="text-muted-foreground mt-1">Manage your tapestry collection</p>
+              </div>
+              <button
+                onClick={openCreateModal}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                <Plus size={20} />
+                Create Tapestry
+              </button>
+            </div>
 
-      {/* Loading State */}
+            {/* Loading State */}
       {loading && (
         <div className="flex justify-center items-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -400,6 +407,9 @@ export default function TapestryTalesPage() {
           </div>
         </div>
       )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
