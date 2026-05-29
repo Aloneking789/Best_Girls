@@ -4,6 +4,8 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import Image from 'next/image';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/header';
+import Sidebar from '@/components/sidebar';
 
 interface AlumniProfile {
   id: string;
@@ -263,23 +265,28 @@ export default function AlumniPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Alumni</h1>
-          <p className="text-muted-foreground mt-1">Manage alumni profiles and published alumni content.</p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
-        >
-          <Plus size={18} />
-          Add Alumni
-        </button>
-      </div>
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-0">
+        <Header breadcrumb={['Content & Website', 'Alumni']} />
+        <main className="flex-1 overflow-auto p-6">
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">Alumni</h1>
+                <p className="text-muted-foreground mt-1">Manage alumni profiles and published alumni content.</p>
+              </div>
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+              >
+                <Plus size={18} />
+                Add Alumni
+              </button>
+            </div>
 
-      {loading ? (
+            {loading ? (
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -489,6 +496,9 @@ export default function AlumniPage() {
           </div>
         </div>
       )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
