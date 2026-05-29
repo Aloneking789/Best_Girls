@@ -41,6 +41,8 @@ const navItems: NavItem[] = [
       { label: 'Gallery', href: '/content/gallery' },
       { label: 'Achievements', href: '/content/achievements' },
       { label: 'Placements', href: '/content/placements' },
+      { label: 'Tapestry Tales', href: '/content/tapestries' },
+      { label: 'Alumni', href: '/content/alumni' },
     ],
   },
 
@@ -99,9 +101,8 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border shadow-lg transform transition-transform duration-300 z-35 md:z-0 md:relative md:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border shadow-lg transform transition-transform duration-300 z-35 md:z-0 md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         {/* Logo */}
         <div className="p-6 border-b border-sidebar-border">
@@ -137,9 +138,8 @@ export default function Sidebar() {
 
                     <ChevronDown
                       size={18}
-                      className={`transition-transform ${
-                        expandedItems.includes(item.label) ? 'rotate-180' : ''
-                      }`}
+                      className={`transition-transform ${expandedItems.includes(item.label) ? 'rotate-180' : ''
+                        }`}
                     />
                   </button>
 

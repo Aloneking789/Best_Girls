@@ -139,10 +139,11 @@ export default function TestimonialsPage() {
       setActionLoading(true);
       setError(null);
 
+      const testimonialType = formData.type === 'video' ? ('VIDEO' as const) : ('TEXT' as const);
       const payload = {
         name: formData.name.trim(),
         designation: formData.designation.trim(),
-        type: formData.type === 'video' ? 'VIDEO' : 'TEXT',
+        type: testimonialType,
         content: formData.type === 'text' ? formData.content?.trim() || '' : undefined,
         videoUrl: formData.type === 'video' ? formData.videoUrl?.trim() || '' : undefined,
         order: formData.sortOrder ?? 0,
@@ -223,7 +224,7 @@ export default function TestimonialsPage() {
                         </span>
                       </div>
 
-                      <p className="text-foreground mb-4 whitespace-pre-line">{testimonial.type === 'text' ? testimonial.content : testimonial.videoUrl}</p>
+                      <p className="text-foreground mb-4 whitespace-pre-line">{testimonial.type === 'TEXT' ? testimonial.content : testimonial.videoUrl}</p>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                         <button
                           onClick={() => handleEdit(testimonial)}
@@ -278,7 +279,7 @@ export default function TestimonialsPage() {
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
             >
               <option value="text">Text</option>
-          
+
             </select>
             {formData.type === 'text' ? (
               <textarea
