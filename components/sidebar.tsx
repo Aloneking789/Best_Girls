@@ -60,6 +60,8 @@ const navItems: NavItem[] = [
     ],
   },
 
+  { label: 'Forms Data', href: '/forms', icon: <Code2 size={20} /> },
+
   { label: 'Notice Board', href: '/notices', icon: <Bell size={20} /> },
   // { label: 'Student Corner', href: '/student-corner', icon: <Code2 size={20} /> },
 
