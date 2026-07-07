@@ -1,10 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, memo } from 'react';
 import Header from '@/components/header';
 import Sidebar from '@/components/sidebar';
 import Modal from '@/components/modal';
 import { Edit2, Trash2, Plus, Search } from 'lucide-react';
+import dynamic from 'next/dynamic';
+const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
+
+interface MemoizedEditorProps {
+  initialValue: string;
+  config: any;
+  editorRef: any;
+}
+
+const MemoizedEditor = memo(({ initialValue, config, editorRef }: MemoizedEditorProps) => {
+  return (
+    <JoditEditor
+      ref={editorRef}
+      value={initialValue}
+      config={config}
+    />
+  );
+}, (prevProps, nextProps) => {
+  return prevProps.initialValue === nextProps.initialValue;
+});
+
 import {
   getPosts,
   createPost,
@@ -35,6 +56,45 @@ export default function BlogPage() {
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  const editor = useRef<any>(null);
+  const config = useMemo(
+    () => ({
+      readonly: false,
+      placeholder: 'Write your blog post content here...',
+      height: 400,
+      minHeight: 300,
+      maxHeight: 600,
+      statusbar: false,
+      toolbarAdaptive: false,
+      buttons: [
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        '|',
+        'ul',
+        'ol',
+        '|',
+        'font',
+        'fontsize',
+        'paragraph',
+        '|',
+        'image',
+        'table',
+        'link',
+        '|',
+        'align',
+        'undo',
+        'redo',
+        '|',
+        'hr',
+        'eraser',
+        'fullsize'
+      ]
+    }),
+    []
+  );
 
   // Fetch posts and categories on mount
   useEffect(() => {
@@ -83,7 +143,9 @@ export default function BlogPage() {
       setActionLoading(true);
       setError(null);
 
-      if (!formData.title?.trim() || !formData.excerpt?.trim() || !formData.content?.trim() || !formData.categoryId) {
+      const finalContent = editor.current ? editor.current.value : (formData.content || '');
+
+      if (!formData.title?.trim() || !formData.excerpt?.trim() || !finalContent.trim() || !formData.categoryId) {
         setError('Title, excerpt, content, and category are required');
         setActionLoading(false);
         return;
@@ -94,7 +156,7 @@ export default function BlogPage() {
           title: formData.title,
           slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
           excerpt: formData.excerpt,
-          content: formData.content,
+          content: finalContent,
           metaTitle: formData.metaTitle || formData.title,
           metaDescription: formData.metaDescription || formData.excerpt,
           categoryId: formData.categoryId,
@@ -110,7 +172,7 @@ export default function BlogPage() {
           title: formData.title || '',
           slug: formData.slug || (formData.title || '').toLowerCase().replace(/\s+/g, '-'),
           excerpt: formData.excerpt || '',
-          content: formData.content || '',
+          content: finalContent,
           metaTitle: formData.metaTitle || formData.title || '',
           metaDescription: formData.metaDescription || formData.excerpt || '',
           categoryId: formData.categoryId || '',
@@ -122,6 +184,7 @@ export default function BlogPage() {
         const created = await createPost(payload);
         setPosts([...posts, created]);
       }
+
 
       setIsPostModalOpen(false);
       setFormData({});
@@ -404,15 +467,23 @@ export default function BlogPage() {
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">Content *</label>
-            <textarea
+            {/* <textarea
               placeholder="Enter post content"
               value={formData.content || ''}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
               rows={4}
               className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
+            /> */}
 
+            {isPostModalOpen && (
+              <MemoizedEditor
+                key={editingId || 'new'}
+                editorRef={editor}
+                initialValue={formData.content || ''}
+                config={config}
+              />
+            )}
+          </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">Meta Title</label>
             <input
